@@ -13,8 +13,8 @@ export const EditorMonaco: React.FC = () => {
 
     return (
         <MonacoEditor
-            width="800"
-            height="800"
+            width="100%"
+            height="100%"
             language="json"
             theme="vs-dark"
             value={value}
