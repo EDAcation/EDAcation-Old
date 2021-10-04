@@ -14,6 +14,8 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle> {
     }
 }
 
+// TODO: copy, move, delete
+
 export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
 
     handle: DirectoryHandle;
@@ -23,6 +25,12 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends Stor
     }
 
     abstract getEntries(recursive?: boolean, force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle>[]>;
+
+    abstract getEntry(name: string): Promise<StorageEntry<DirectoryHandle, FileHandle> | undefined>;
+
+    abstract createDirectory(name: string): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
+
+    abstract createFile(name: string): Promise<StorageFile<DirectoryHandle, FileHandle>>;
 
     async print(indent = '') {
         console.log(`${indent}${this.name} (${this.type.substring(0, 1)})`);
@@ -44,6 +52,18 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
 
     constructor(handle: FileHandle) {
         super(handle, StorageEntryType.FILE);
+    }
+
+    abstract read(): Promise<string>;
+
+    async readJSON() {
+        return JSON.parse(await this.read());
+    }
+
+    abstract write(content: string): Promise<void>;
+
+    async writeJSON(content: unknown) {
+        await this.write(JSON.stringify(content));
     }
 }
 

@@ -4,7 +4,7 @@ export type StorageEntryFSA = StorageEntry<FileSystemDirectoryHandle, FileSystem
 
 export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHandle, FileSystemFileHandle> {
 
-    _entries?: StorageEntryFSA[];
+    private _entries?: StorageEntryFSA[];
 
     constructor(handle: FileSystemDirectoryHandle) {
         super(handle);
@@ -28,6 +28,25 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
         this._entries = entries;
         return entries;
     }
+
+    async getEntry(name: string) {
+        const entries = await this.getEntries();
+        return entries.find((entry) => entry.name === name);
+    }
+
+    async createDirectory(name: string) {
+        const handle = await this.handle.getDirectoryHandle(name, {
+            create: true
+        });
+        return new StorageDirectoryFSA(handle);
+    }
+
+    async createFile(name: string) {
+        const handle = await this.handle.getFileHandle(name, {
+            create: true
+        });
+        return new StorageFileFSA(handle);
+    }
 }
 
 export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileSystemFileHandle> {
@@ -35,6 +54,17 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
     constructor(handle: FileSystemFileHandle) {
         super(handle);
         this.name = handle.name;
+    }
+
+    async read() {
+        const file = await this.handle.getFile();
+        return await file.text();
+    }
+
+    async write(content: string) {
+        const writable = await this.handle.createWritable();
+        await writable.write(content);
+        await writable.close();
     }
 }
 
