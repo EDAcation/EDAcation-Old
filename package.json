@@ -1,0 +1,45 @@
+{
+    "name": "edacation",
+    "description": "Web based learning environment for digital hardware design.",
+    "version": "1.0.0",
+    "license": "UNLICENSED",
+    "private": true,
+    "contributors": [
+        "Daniel Huisman <daniel@huisman.me> (https://danielhuisman.io)"
+    ],
+    "repository": "github:Hendrik-0/EDAcation",
+    "keywords": [
+        "edacation",
+        "digital",
+        "hardware",
+        "design",
+        "fpga"
+    ],
+    "browserslist": "> 0.5%, last 2 versions, not dead",
+    "scripts": {
+        "lint": "eslint src",
+        "clean": "rimraf dist",
+        "build": "yarn run clean && yarn run lint && yarn run build:parcel",
+        "build:parcel": "parcel build public/index.html --public-url / --no-source-maps ",
+        "dev": "parcel public/index.html"
+    },
+    "dependencies": {
+        "@types/node": "^16.10.2",
+        "@types/react": "^17.0.3",
+        "@types/react-dom": "^17.0.3",
+        "@types/react-helmet": "^6.1.1",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "react-helmet": "^6.1.0"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^4.28.0",
+        "@typescript-eslint/parser": "^4.28.0",
+        "eslint": "^7.29.0",
+        "eslint-config-google": "^0.14.0",
+        "eslint-plugin-import": "^2.23.4",
+        "parcel": "^2.0.0-rc.0",
+        "rimraf": "^3.0.2",
+        "typescript": "^4.3.4"
+    }
+}
