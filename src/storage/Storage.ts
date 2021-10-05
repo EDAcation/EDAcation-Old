@@ -69,5 +69,17 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
 
 export abstract class Storage<DirectoryHandle, FileHandle> {
 
+    static getName() {
+        return this.name.replace('Storage', '');
+    }
+
+    static getAddText() {
+        return `Add ${this.getName()} storage`;
+    }
+
+    getName() {
+        return (this.constructor as typeof Storage).getName();
+    }
+
     abstract selectDirectory(): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
 }

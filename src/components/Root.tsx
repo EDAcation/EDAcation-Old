@@ -2,12 +2,15 @@ import {BaseStyles, ThemeProvider} from '@primer/components';
 import React from 'react';
 
 import {App} from './app/App';
+import {StateProvider} from './state/StateContext';
 
 export const Root = () => {
     return (
         <ThemeProvider colorMode="night">
             <BaseStyles>
-                <App />
+                <StateProvider>
+                    <App />
+                </StateProvider>
             </BaseStyles>
         </ThemeProvider>
     );

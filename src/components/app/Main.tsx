@@ -7,7 +7,7 @@ import {FileBrowser} from '../file-browser/FileBrowser';
 export const Main = () => {
     return (
         <main>
-            <Box height="100%" display="grid" gridTemplateColumns="1fr 3fr">
+            <Box height="100%" display="grid" gridTemplateColumns="1fr 3fr" backgroundColor="black">
                 <Box>
                     <FileBrowser />
                 </Box>

@@ -70,6 +70,14 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
 
 export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFileHandle> {
 
+    static getName() {
+        return 'File System Access';
+    }
+
+    static getAddText() {
+        return 'Open local directory';
+    }
+
     async selectDirectory(): Promise<StorageDirectoryFSA> {
         return new StorageDirectoryFSA(await window.showDirectoryPicker());
     }
