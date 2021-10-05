@@ -1,3 +1,5 @@
+import {StorageType} from './StorageType';
+
 export enum StorageEntryType {
     DIRECTORY = 'DIRECTORY',
     FILE = 'FILE'
@@ -14,7 +16,7 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle> {
     }
 }
 
-// TODO: copy, move, delete
+// TODO: copy, move
 
 export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
 
@@ -49,9 +51,11 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends Stor
 export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
 
     handle: FileHandle;
+    parent: StorageDirectory<DirectoryHandle, FileHandle>;
 
-    constructor(handle: FileHandle) {
+    constructor(handle: FileHandle, parent: StorageDirectory<DirectoryHandle, FileHandle>) {
         super(handle, StorageEntryType.FILE);
+        this.parent = parent;
     }
 
     abstract read(): Promise<string>;
@@ -65,9 +69,15 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
     async writeJSON(content: unknown) {
         await this.write(JSON.stringify(content));
     }
+
+    abstract delete(): Promise<void>;
 }
 
 export abstract class Storage<DirectoryHandle, FileHandle> {
+
+    static getType(): StorageType {
+        throw new Error('Not implemented.');
+    }
 
     static getName() {
         return this.name.replace('Storage', '');
@@ -77,9 +87,19 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
         return `Add ${this.getName()} storage`;
     }
 
+    getType() {
+        return (this.constructor as typeof Storage).getType();
+    }
+
     getName() {
         return (this.constructor as typeof Storage).getName();
     }
 
-    abstract selectDirectory(): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
+    abstract serialize(): Record<string, unknown>;
+
+    abstract deserialize(data: Record<string, unknown>): void;
+
+    abstract getRoot(): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
+
+    abstract add(): Promise<void>;
 }

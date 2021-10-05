@@ -1,4 +1,5 @@
 import {Storage, StorageDirectory, StorageEntry, StorageFile} from './Storage';
+import {StorageType} from './StorageType';
 
 export type StorageEntryFSA = StorageEntry<FileSystemDirectoryHandle, FileSystemFileHandle>;
 
@@ -21,7 +22,7 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
             if (handle.kind === 'directory') {
                 entries.push(new StorageDirectoryFSA(handle));
             } else {
-                entries.push(new StorageFileFSA(handle));
+                entries.push(new StorageFileFSA(handle, this));
             }
         }
 
@@ -45,14 +46,14 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
         const handle = await this.handle.getFileHandle(name, {
             create: true
         });
-        return new StorageFileFSA(handle);
+        return new StorageFileFSA(handle, this);
     }
 }
 
 export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileSystemFileHandle> {
 
-    constructor(handle: FileSystemFileHandle) {
-        super(handle);
+    constructor(handle: FileSystemFileHandle, parent: StorageDirectoryFSA) {
+        super(handle, parent);
         this.name = handle.name;
     }
 
@@ -66,9 +67,19 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
         await writable.write(content);
         await writable.close();
     }
+
+    async delete() {
+        await this.parent.handle.removeEntry(this.handle.name);
+    }
 }
 
 export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFileHandle> {
+
+    private root: StorageDirectoryFSA;
+
+    static getType() {
+        return StorageType.FILE_SYSTEM_ACCESS;
+    }
 
     static getName() {
         return 'File System Access';
@@ -78,7 +89,20 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
         return 'Open local directory';
     }
 
-    async selectDirectory(): Promise<StorageDirectoryFSA> {
-        return new StorageDirectoryFSA(await window.showDirectoryPicker());
+    serialize() {
+        // TODO
+        return {};
+    }
+
+    deserialize(data: Record<string, unknown>) {
+        // TODO
+    }
+
+    async getRoot(): Promise<StorageDirectoryFSA> {
+        return this.root;
+    }
+
+    async add() {
+        this.root = new StorageDirectoryFSA(await window.showDirectoryPicker());
     }
 }

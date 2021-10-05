@@ -1,35 +1,50 @@
-import {Storage} from './storage';
+import {Storage, storageByType} from './storage';
 
 export interface State {
     storages: Storage<unknown, unknown>[];
 }
 
-
 const DEFAULT_STATE: State = {
     storages: []
 };
 
-export const loadState = () => {
+// TODO: change to IndexedDB to allow storage of file handles (https://github.com/WICG/file-system-access/blob/main/EXPLAINER.md)
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const loadState = (): State => {
     // Load state from local storage
-    let loadedState: State;
+    let serializedState: any;
     try {
-        loadedState = JSON.parse(localStorage.getItem('state') ?? '');
+        serializedState = JSON.parse(localStorage.getItem('state') ?? '');
     } catch (err) {
-        loadedState = DEFAULT_STATE;
+        serializedState = DEFAULT_STATE;
     }
 
-    const state = loadedState;
+    // Deserialize state
+    return {
+        storages: serializedState.storages.map((data: any) => {
+            if (!data.type || !storageByType[data.type]) {
+                throw Error(`Unknown storage type "${data.type}"`);
+            }
 
-    // TODO: transform JSON state to JS
-
-    return state;
+            const storage = new storageByType[data.type]();
+            storage.deserialize(data);
+            return storage;
+        })
+    };
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export const storeState = (state: State) => {
-    const storedState = state;
-
-    // TODO: transform JS state to JSON
+    // Serialize state
+    const serializedState = {
+        ...state,
+        storages: state.storages.map((storage) => ({
+            type: storage.getType(),
+            ...storage.serialize()
+        }))
+    };
 
     // Store state in local storage
-    // localStorage.setItem('state', JSON.stringify(storedState));
+    // localStorage.setItem('state', JSON.stringify(serializedState));
 };
