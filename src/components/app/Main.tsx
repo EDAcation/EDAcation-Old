@@ -1,3 +1,4 @@
+import {Box} from '@primer/components';
 import React from 'react';
 
 import {EditorMonaco} from '../editor/EditorMonoca';
@@ -5,18 +6,15 @@ import {FileBrowser} from '../file-browser/FileBrowser';
 
 export const Main = () => {
     return (
-        <main style={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
-            <div style={{display: 'flex', alignItems: 'center', padding: '0.5rem', backgroundColor: '#111', color: '#fff'}}>
-                EDAcation
-            </div>
-            <div style={{display: 'flex', height: '100%'}}>
-                <div style={{width: '30vw', backgroundColor: '#111'}}>
+        <main>
+            <Box height="100%" display="grid" gridTemplateColumns="1fr 3fr">
+                <Box>
                     <FileBrowser />
-                </div>
-                <div style={{width: '70vw'}}>
+                </Box>
+                <Box>
                     <EditorMonaco />
-                </div>
-            </div>
+                </Box>
+            </Box>
         </main>
     );
 };
