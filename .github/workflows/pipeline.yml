@@ -44,3 +44,15 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: dist
+
+  cleanup:
+    needs:
+      - build
+      - deploy
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: react-build
+          failOnError: false
