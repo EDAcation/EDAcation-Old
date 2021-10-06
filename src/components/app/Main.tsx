@@ -2,7 +2,7 @@ import {Box} from '@primer/components';
 import React from 'react';
 
 import {EditorMonaco} from '../editor/EditorMonoca';
-import {FileBrowser} from '../file-browser/FileBrowser';
+import {FileBrowser} from '../storage/StorageList';
 
 export const Main = () => {
     return (

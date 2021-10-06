@@ -101,5 +101,9 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
 
     abstract getRoot(): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
 
+    abstract hasPermission(): Promise<boolean>;
+
+    abstract requestPermission(): Promise<boolean>;
+
     abstract add(): Promise<void>;
 }

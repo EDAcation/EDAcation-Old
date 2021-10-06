@@ -75,6 +75,10 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
 
 export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFileHandle> {
 
+    private static PERMISSION_OPTIONS: FileSystemHandlePermissionDescriptor = {
+        mode: 'readwrite'
+    };
+
     private root: StorageDirectoryFSA;
 
     static getType() {
@@ -101,6 +105,14 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
 
     async getRoot(): Promise<StorageDirectoryFSA> {
         return this.root;
+    }
+
+    async hasPermission(): Promise<boolean> {
+        return await this.root.handle.queryPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
+    }
+
+    async requestPermission(): Promise<boolean> {
+        return await this.root.handle.requestPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 
     async add() {

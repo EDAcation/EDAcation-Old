@@ -3,7 +3,9 @@ import React, {useContext} from 'react';
 
 import {storageByType, StorageType} from '../../storage';
 import {StateContext} from '../state/StateContext';
-import {AddStorageButton} from '../storage/AddStorageButton';
+
+import {AddStorageButton} from './AddStorageButton';
+import {StorageListItem} from './StorageListItem';
 
 export const FileBrowser: React.FC = () => {
     const [state, updateState] = useContext(StateContext);
@@ -34,11 +36,7 @@ export const FileBrowser: React.FC = () => {
                 </Box>
             )}
 
-            {state.storages.map((storage) => (
-                <>
-                    {storage.getName()}
-                </>
-            ))}
+            {state.storages.map((storage) => <StorageListItem key={storage.getType()} storage={storage} />)}
         </>
     );
 };
