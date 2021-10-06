@@ -90,12 +90,13 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
     }
 
     serialize() {
-        // TODO
-        return {};
+        return {
+            handle: this.root.handle
+        };
     }
 
     deserialize(data: Record<string, unknown>) {
-        // TODO
+        this.root = new StorageDirectoryFSA(data.handle as FileSystemDirectoryHandle);
     }
 
     async getRoot(): Promise<StorageDirectoryFSA> {

@@ -1,23 +1,21 @@
+import {get, set} from 'idb-keyval';
+
 import {Storage, storageByType} from './storage';
 
 export interface State {
     storages: Storage<unknown, unknown>[];
 }
 
-const DEFAULT_STATE: State = {
+export const DEFAULT_STATE: State = {
     storages: []
 };
 
-// TODO: change to IndexedDB to allow storage of file handles (https://github.com/WICG/file-system-access/blob/main/EXPLAINER.md)
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const loadState = (): State => {
-    // Load state from local storage
-    let serializedState: any;
-    try {
-        serializedState = JSON.parse(localStorage.getItem('state') ?? '');
-    } catch (err) {
-        serializedState = DEFAULT_STATE;
+export const loadState = async (): Promise<State> => {
+    // Load state from IndexedDB
+    const serializedState = await get('state');
+    if (!serializedState) {
+        return DEFAULT_STATE;
     }
 
     // Deserialize state
@@ -35,7 +33,7 @@ export const loadState = (): State => {
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export const storeState = (state: State) => {
+export const storeState = async (state: State) => {
     // Serialize state
     const serializedState = {
         ...state,
@@ -45,6 +43,6 @@ export const storeState = (state: State) => {
         }))
     };
 
-    // Store state in local storage
-    // localStorage.setItem('state', JSON.stringify(serializedState));
+    // Store state in IndexedDB
+    await set('state', serializedState);
 };

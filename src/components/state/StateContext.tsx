@@ -1,27 +1,32 @@
-import React, {createContext, useState} from 'react';
+import React, {createContext, useEffect, useState} from 'react';
 
-import {loadState, State, storeState} from '../../state';
+import {loadState, storeState, State, DEFAULT_STATE} from '../../state';
 
-type UpdateState = (state: State) => void;
+type UpdateState = (state: State) => Promise<void>;
 
-// Load state from local storage
-const loadedState = loadState();
-
-export const StateContext = createContext<[State, UpdateState]>([loadedState, () => undefined]);
+export const StateContext = createContext<[State, UpdateState]>([DEFAULT_STATE, () => Promise.resolve()]);
 
 export const StateProvider: React.FC = (props) => {
-    const [state, setState] = useState(loadedState);
+    const [state, setState] = useState(DEFAULT_STATE);
 
-    const updateState: UpdateState = (partialNewState) => {
+    useEffect(() => {
+        (async () => {
+            setState(await loadState());
+        })();
+    }, []);
+
+    const updateState: UpdateState = async (partialNewState) => {
         // Merge current and new state (shallow)
         const newState = {
             ...state,
             ...partialNewState
         };
 
-        storeState(newState);
+        await storeState(newState);
         setState(newState);
     };
+
+    console.log(state);
 
     return (
         <StateContext.Provider value={[state, updateState]} {...props} />

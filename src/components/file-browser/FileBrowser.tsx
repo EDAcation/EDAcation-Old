@@ -10,9 +10,9 @@ export const FileBrowser: React.FC = () => {
 
     const handleAdd = async (type: StorageType) => {
         const storage = new storageByType[type]();
-        await storage.selectDirectory();
+        await storage.add();
 
-        updateState({
+        await updateState({
             storages: [
                 ...state.storages,
                 storage
