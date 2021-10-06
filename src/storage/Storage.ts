@@ -1,3 +1,5 @@
+import {v4 as uuidv4} from 'uuid';
+
 import {StorageType} from './StorageType';
 
 export enum StorageEntryType {
@@ -75,6 +77,8 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
 
 export abstract class Storage<DirectoryHandle, FileHandle> {
 
+    private id: string;
+
     static getType(): StorageType {
         throw new Error('Not implemented.');
     }
@@ -85,6 +89,14 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
 
     static getAddText() {
         return `Add ${this.getName()} storage`;
+    }
+
+    constructor(id?: string) {
+        this.id = id || uuidv4();
+    }
+
+    getID() {
+        return this.id;
     }
 
     getType() {
@@ -106,4 +118,23 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
     abstract requestPermission(): Promise<boolean>;
 
     abstract add(): Promise<void>;
+
+    async getEntry(path: string[]) {
+        let current = await this.getRoot();
+        for (let i = 0; i < path.length; i++) {
+            const entry = await current.getEntry(path[i]);
+            if (!entry) {
+                throw new Error(`Entry "${path[i]}" in path "${path.join('/')}" does not exist.`);
+            }
+            if (i < path.length - 1) {
+                if (!(entry instanceof StorageDirectory)) {
+                    throw new Error(`Entry "${path[i]}" in path "${path.join('/')}" is not a directory.`);
+                }
+                current = entry;
+            }
+
+            return entry as StorageFile<unknown, unknown>;
+        }
+        throw new Error('Unreachable code.');
+    }
 }

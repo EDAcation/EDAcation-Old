@@ -117,5 +117,9 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
 
     async add() {
         this.root = new StorageDirectoryFSA(await window.showDirectoryPicker());
+
+        if (!await this.hasPermission()) {
+            await this.requestPermission();
+        }
     }
 }

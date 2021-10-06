@@ -2,7 +2,7 @@ import React, {createContext, useEffect, useState} from 'react';
 
 import {loadState, storeState, State, DEFAULT_STATE} from '../../state';
 
-type UpdateState = (state: State) => Promise<void>;
+type UpdateState = (state: Partial<State>) => Promise<void>;
 
 export const StateContext = createContext<[State, UpdateState]>([DEFAULT_STATE, () => Promise.resolve()]);
 
