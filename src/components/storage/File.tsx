@@ -10,7 +10,7 @@ export interface FileProps {
 
 export const File: React.FC<FileProps> = ({file}) => {
     return (
-        <Text>
+        <Text style={{cursor: 'pointer', userSelect: 'none'}}>
             <StyledOcticon icon={FileIcon} mr={1} />
             {file.name}
         </Text>

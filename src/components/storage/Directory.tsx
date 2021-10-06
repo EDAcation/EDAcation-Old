@@ -1,6 +1,6 @@
 import {Box, StyledOcticon, Text} from '@primer/components';
 import {ChevronDownIcon, ChevronRightIcon} from '@primer/octicons-react';
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 
 import {StorageDirectory, StorageEntry, StorageFile} from '../../storage';
 
@@ -14,6 +14,15 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [entries, setEntries] = useState<StorageEntry<unknown, unknown>[] | undefined>(undefined);
 
+    const sortedEntries = useMemo(() => {
+        return entries?.sort((a, b) => {
+            if (a.type !== b.type) {
+                return a.type < b.type ? -1 : 1;
+            }
+            return a.name < b.name ? -1 : 1;
+        });
+    }, [entries]);
+
     const handleClick = async () => {
         if (!isOpen) {
             setEntries(await directory.getEntries());
@@ -23,14 +32,14 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
 
     return (
         <>
-            <Text onClick={handleClick} style={{cursor: 'pointer'}}>
+            <Text onClick={handleClick} style={{cursor: 'pointer', userSelect: 'none'}}>
                 <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} mr={1} />
                 {directory.name}
             </Text>
 
-            {isOpen && entries && (
+            {isOpen && sortedEntries && (
                 <Box>
-                    {entries.map((entry) => {
+                    {sortedEntries.map((entry) => {
                         let component: JSX.Element;
                         if (entry instanceof StorageDirectory) {
                             component = <Directory directory={entry} />;
