@@ -1,4 +1,4 @@
-import {Box} from '@primer/components';
+import {Box, Text} from '@primer/components';
 import React, {useContext} from 'react';
 
 import {storageByType, StorageType} from '../../storage';
@@ -27,8 +27,8 @@ export const FileBrowser: React.FC = () => {
     return (
         <>
             {state.storages.length === 0 && (
-                <Box p={2}>
-                    No storage providers available.
+                <Box px={1} py={2}>
+                    <Text display="block" mb={1}>No storage providers available.</Text>
 
                     {Object.values(StorageType).map((type) => (
                         <AddStorageButton storageType={type} onClick={handleAdd.bind(this, type)} />

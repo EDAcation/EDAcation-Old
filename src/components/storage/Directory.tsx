@@ -1,3 +1,5 @@
+import {Box, StyledOcticon, Text} from '@primer/components';
+import {ChevronDownIcon, ChevronRightIcon} from '@primer/octicons-react';
 import React, {useState} from 'react';
 
 import {StorageDirectory, StorageEntry, StorageFile} from '../../storage';
@@ -21,10 +23,13 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
 
     return (
         <>
-            <span onClick={handleClick}>{directory.name}</span>
+            <Text onClick={handleClick} style={{cursor: 'pointer'}}>
+                <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} mr={1} />
+                {directory.name}
+            </Text>
 
             {isOpen && entries && (
-                <ul className="list-style-none">
+                <Box>
                     {entries.map((entry) => {
                         let component: JSX.Element;
                         if (entry instanceof StorageDirectory) {
@@ -36,10 +41,10 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
                         }
 
                         return (
-                            <li key={entry.name}>{component}</li>
+                            <Box key={entry.name} pl={3}>{component}</Box>
                         );
                     })}
-                </ul>
+                </Box>
             )}
         </>
     );

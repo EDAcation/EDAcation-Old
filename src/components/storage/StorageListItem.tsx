@@ -1,4 +1,4 @@
-import {Button, Heading, Spinner} from '@primer/components';
+import {Box, Button, Heading, Spinner} from '@primer/components';
 import React, {useEffect, useState} from 'react';
 
 import {Storage, StorageDirectory} from '../../storage';
@@ -26,10 +26,16 @@ export const StorageListItem: React.FC<StorageProps> = ({storage}) => {
 
     return (
         <>
-            <Heading fontSize={2}>{storage.getName()}</Heading>
+            <Box px={1}>
+                <Heading fontSize={2} p={1}>
+                    {storage.getName()}
+                    {root && ` (${root.name})`}
+                </Heading>
 
-            {!hasPermission && <Button onClick={handlePermissionClick}>Grant permission</Button>}
-            {hasPermission && !root && <Spinner />}
+                {!hasPermission && <Button onClick={handlePermissionClick}>Grant permission</Button>}
+                {hasPermission && !root && <Spinner />}
+            </Box>
+
             {hasPermission && root && <Directory directory={root} />}
         </>
     );
