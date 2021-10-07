@@ -183,6 +183,7 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
                     throw new StorageError(`Entry "${path[i]}" in path "${path.join('/')}" is not a directory.`);
                 }
                 current = entry;
+                continue;
             }
 
             return entry as StorageFile<unknown, unknown>;

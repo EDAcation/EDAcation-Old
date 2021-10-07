@@ -1,11 +1,17 @@
 import {Header as PrimerHeader} from '@primer/components';
 import React from 'react';
 
+import {ThemeButton} from '../theme/ThemeButton';
+
 export const Header = () => {
     return (
         <header>
             <PrimerHeader style={{height: '3rem'}}>
-                <PrimerHeader.Item>EDAcation</PrimerHeader.Item>
+                <PrimerHeader.Item full>EDAcation</PrimerHeader.Item>
+
+                <PrimerHeader.Item>
+                    <ThemeButton />
+                </PrimerHeader.Item>
             </PrimerHeader>
         </header>
     );

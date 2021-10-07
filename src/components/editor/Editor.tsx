@@ -43,6 +43,7 @@ export const Editor: React.FC = () => {
 
                     if (!file.content) {
                         // Read file from storage
+                        console.log(file.file);
                         files.push({
                             ...file,
                             content: await file.file?.read()
@@ -75,13 +76,17 @@ export const Editor: React.FC = () => {
     if (!file.file) {
         return (
             <Box p={2}>
-                <Text>Grant permission to storage provider to view file's content.</Text>
+                <Text>Grant permission to this file's storage provider to view the contents.</Text>
             </Box>
         );
     }
 
     if (!file.content) {
-        return <Spinner />;
+        return (
+            <Box p={2}>
+                <Spinner />;
+            </Box>
+        );
     }
 
     return (

@@ -13,7 +13,7 @@ export const Main = () => {
 
     return (
         <main style={{height: 'calc(100vh - 3rem)'}}>
-            <Box backgroundColor="canvas.default">
+            <Box height="100%" backgroundColor="canvas.default">
                 {state.loading && <Spinner />}
 
                 {!state.loading && (

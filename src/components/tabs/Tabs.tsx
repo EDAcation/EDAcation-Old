@@ -1,5 +1,5 @@
 import {ButtonClose, TabNav} from '@primer/components';
-import React, {useContext} from 'react';
+import React, {isValidElement, MouseEvent, useContext} from 'react';
 
 import {EditorFile} from '../../state';
 import {StateContext} from '../state/StateContext';
@@ -18,8 +18,10 @@ export const Tabs: React.FC = () => {
         });
     };
 
-    const handleClose = async (file: EditorFile, index: number) => {
-        const files = state.editor.files.filter((f) => f !== file);
+    const handleClose = async (file: EditorFile, index: number, event: MouseEvent) => {
+        event.stopPropagation();
+
+        const files = state.editor.files.filter((f) => f.id !== file.id);
 
         await updateState({
             editor: {

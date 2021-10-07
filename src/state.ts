@@ -12,6 +12,7 @@ export interface EditorFile {
 
 export interface State {
     loading: boolean;
+    theme: 'light' | 'dark';
     storages: Storage<unknown, unknown>[];
     editor: {
         files: EditorFile[];
@@ -21,6 +22,7 @@ export interface State {
 
 export const DEFAULT_STATE: State = {
     loading: true,
+    theme: 'dark',
     storages: [],
     editor: {
         files: [],
@@ -41,18 +43,24 @@ export const loadState = async (): Promise<State> => {
         return state;
     }
 
-    // Deserialize storages
-    state.storages = (serializedState.storages as any[])
-        .map((data: any): Storage<unknown, unknown> | null => {
-            if (!data.type || !storageByType[data.type]) {
-                return null;
-            }
+    if (serializedState.theme) {
+        state.theme = serializedState.theme;
+    }
 
-            const storage: Storage<unknown, unknown> = new storageByType[data.type](data.id);
-            storage.deserialize(data);
-            return storage;
-        })
-        .filter((s): s is Storage<unknown, unknown> => s !== null);
+    // Deserialize storages
+    if (serializedState.storages) {
+        state.storages = (serializedState.storages as any[])
+            .map((data: any): Storage<unknown, unknown> | null => {
+                if (!data.type || !storageByType[data.type]) {
+                    return null;
+                }
+
+                const storage: Storage<unknown, unknown> = new storageByType[data.type](data.id);
+                storage.deserialize(data);
+                return storage;
+            })
+            .filter((s): s is Storage<unknown, unknown> => s !== null);
+    }
 
     // Deserialize editor
     if (serializedState.editor) {

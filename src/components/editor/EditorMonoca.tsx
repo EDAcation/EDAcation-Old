@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import MonacoEditor, {loader} from '@monaco-editor/react';
 
 import {EditorFile} from '../../state';
+import {StateContext} from '../state/StateContext';
 
 export interface EditorMonacoProps {
     file: EditorFile;
@@ -11,6 +12,7 @@ export interface EditorMonacoProps {
 loader.init();
 
 export const EditorMonaco: React.FC<EditorMonacoProps> = ({file}) => {
+    const [state] = useContext(StateContext);
     const [id, setId] = useState(file.id);
     const [value, setValue] = useState(file.content);
 
@@ -24,7 +26,7 @@ export const EditorMonaco: React.FC<EditorMonacoProps> = ({file}) => {
     return (
         <MonacoEditor
             path={[file.storage.getID()].concat(file.path).join('/')}
-            theme="vs-dark"
+            theme={state.theme === 'light' ? 'vs-light' : 'vs-dark'}
             value={value}
             onChange={(newValue) => setValue(newValue || value)}
             onMount={(editor) => editor.focus()}
