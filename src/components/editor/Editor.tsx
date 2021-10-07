@@ -1,3 +1,4 @@
+import {Box, Spinner, Text} from '@primer/components';
 import React, {useContext, useEffect} from 'react';
 
 import {EditorFile} from '../../state';
@@ -65,10 +66,22 @@ export const Editor: React.FC = () => {
         })();
     }, [state.editor.files, state.storages]);
 
-    const file = state.editor.files.length > 0 ? state.editor.files[state.editor.files.length - 1] : null;
+    const file = state.editor.files.length > 0 ? state.editor.files.find((file) => file.id === state.editor.openFileId) : null;
 
-    if (!file || !file.content) {
+    if (!file) {
         return <></>;
+    }
+
+    if (!file.file) {
+        return (
+            <Box p={2}>
+                <Text>Grant permission to storage provider to view file's content.</Text>
+            </Box>
+        );
+    }
+
+    if (!file.content) {
+        return <Spinner />;
     }
 
     return (

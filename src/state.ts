@@ -3,6 +3,7 @@ import {get, set} from 'idb-keyval';
 import {Storage, storageByType, StorageFile} from './storage';
 
 export interface EditorFile {
+    id: string;
     storage: Storage<unknown, unknown>;
     path: string[];
     file?: StorageFile<unknown, unknown>;
@@ -14,6 +15,7 @@ export interface State {
     storages: Storage<unknown, unknown>[];
     editor: {
         files: EditorFile[];
+        openFileId: string | null;
     };
 }
 
@@ -21,7 +23,8 @@ export const DEFAULT_STATE: State = {
     loading: true,
     storages: [],
     editor: {
-        files: []
+        files: [],
+        openFileId: null
     }
 };
 
@@ -53,16 +56,19 @@ export const loadState = async (): Promise<State> => {
 
     // Deserialize editor
     if (serializedState.editor) {
+        state.editor.openFileId = serializedState.editor.openFileId;
+
         // Deserialize open files
         for await (const serializedFile of serializedState.editor.files) {
-            const storage = state.storages.find((s) => s.getID() === serializedFile.file.storageId);
+            const storage = state.storages.find((s) => s.getID() === serializedFile.file.storage);
             if (!storage) {
                 continue;
             }
 
             state.editor.files.push({
+                id: serializedFile.file.id,
                 storage,
-                path: serializedFile.file.path as string[]
+                path: serializedFile.file.path
             });
         }
     }
@@ -79,8 +85,8 @@ export const storeState = async (state: State) => {
             ...state.editor,
             files: state.editor.files.map((file) => ({
                 file: {
-                    storageId: file.storage.getID(),
-                    path: file.path
+                    ...file,
+                    storage: file.storage.getID()
                 }
             }))
         },

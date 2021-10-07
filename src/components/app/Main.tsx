@@ -6,6 +6,7 @@ import {SplitPane, Pane} from '@deviousm/react-split-pane';
 import {Editor} from '../editor/Editor';
 import {StorageList} from '../storage/StorageList';
 import {StateContext} from '../state/StateContext';
+import {Tabs} from '../tabs/Tabs';
 
 export const Main = () => {
     const [state] = useContext(StateContext);
@@ -21,6 +22,7 @@ export const Main = () => {
                             <StorageList />
                         </Pane>
                         <Pane minSize="5%">
+                            <Tabs />
                             <Editor />
                         </Pane>
                     </SplitPane>
