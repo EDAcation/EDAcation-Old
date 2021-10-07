@@ -2,49 +2,96 @@ import {v4 as uuidv4} from 'uuid';
 
 import {StorageType} from './StorageType';
 
+export class StorageError extends Error {}
+
 export enum StorageEntryType {
     DIRECTORY = 'DIRECTORY',
     FILE = 'FILE'
 }
 
 export abstract class StorageEntry<DirectoryHandle, FileHandle> {
-    type: StorageEntryType;
-    name: string;
-    handle: DirectoryHandle | FileHandle;
 
-    constructor(handle: DirectoryHandle | FileHandle, type: StorageEntryType) {
+    protected storage: Storage<DirectoryHandle, FileHandle>;
+    protected parent: StorageDirectory<DirectoryHandle, FileHandle> | null;
+    protected type: StorageEntryType;
+    protected handle: DirectoryHandle | FileHandle;
+
+    constructor(
+        storage: Storage<DirectoryHandle, FileHandle>,
+        parent: StorageDirectory<DirectoryHandle, FileHandle> | null,
+        handle: DirectoryHandle | FileHandle,
+        type: StorageEntryType
+    ) {
+        this.storage = storage;
+        this.parent = parent;
         this.handle = handle;
         this.type = type;
     }
+
+    getStorage() {
+        return this.storage;
+    }
+
+    getParent() {
+        return this.parent;
+    }
+
+    getHandle() {
+        return this.handle;
+    }
+
+    getType() {
+        return this.type;
+    }
+
+    abstract getName(): string;
+
+    getExtension() {
+        const name = this.getName();
+        return name.substring(name.indexOf('.') + 1, name.length);
+    }
+
+    getPath(): string[] {
+        if (!this.parent) {
+            return [];
+        }
+        return this.parent.getParent() ? [...this.parent.getPath(), this.getName()] : [this.getName()];
+    }
+
+    abstract delete(): Promise<void>;
 }
 
 // TODO: copy, move
 
 export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
 
-    handle: DirectoryHandle;
+    protected handle: DirectoryHandle;
 
-    constructor(handle: DirectoryHandle) {
-        super(handle, StorageEntryType.DIRECTORY);
+    constructor(storage: Storage<DirectoryHandle, FileHandle>, parent: StorageDirectory<DirectoryHandle, FileHandle> | null, handle: DirectoryHandle) {
+        super(storage, parent, handle, StorageEntryType.DIRECTORY);
     }
 
-    abstract getEntries(recursive?: boolean, force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle>[]>;
+    getHandle() {
+        return this.handle;
+    }
 
-    abstract getEntry(name: string): Promise<StorageEntry<DirectoryHandle, FileHandle> | undefined>;
+    abstract getEntries(force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle>[]>;
+
+    abstract getEntry(name: string, force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle> | undefined>;
 
     abstract createDirectory(name: string): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
 
     abstract createFile(name: string): Promise<StorageFile<DirectoryHandle, FileHandle>>;
 
     async print(indent = '') {
-        console.log(`${indent}${this.name} (${this.type.substring(0, 1)})`);
+        console.log(`${indent}${this.getName()} (${this.getType().substring(0, 1)})`);
         indent += '|  ';
 
         for (const entry of await this.getEntries()) {
             if (entry instanceof StorageDirectory) {
                 await entry.print(indent);
             } else {
-                console.log(`${indent}${entry.name} (${entry.type.substring(0, 1)})`);
+                console.log(`${indent}${entry.getName()} (${entry.getType().substring(0, 1)})`);
             }
         }
     }
@@ -52,12 +99,19 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends Stor
 
 export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
 
-    handle: FileHandle;
-    parent: StorageDirectory<DirectoryHandle, FileHandle>;
+    protected parent: StorageDirectory<DirectoryHandle, FileHandle>;
+    protected handle: FileHandle;
 
-    constructor(handle: FileHandle, parent: StorageDirectory<DirectoryHandle, FileHandle>) {
-        super(handle, StorageEntryType.FILE);
-        this.parent = parent;
+    constructor(storage: Storage<DirectoryHandle, FileHandle>, parent: StorageDirectory<DirectoryHandle, FileHandle>, handle: FileHandle) {
+        super(storage, parent, handle, StorageEntryType.FILE);
+    }
+
+    getParent() {
+        return this.parent;
+    }
+
+    getHandle() {
+        return this.handle;
     }
 
     abstract read(): Promise<string>;
@@ -71,8 +125,6 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
     async writeJSON(content: unknown) {
         await this.write(JSON.stringify(content));
     }
-
-    abstract delete(): Promise<void>;
 }
 
 export abstract class Storage<DirectoryHandle, FileHandle> {
@@ -124,11 +176,11 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
         for (let i = 0; i < path.length; i++) {
             const entry = await current.getEntry(path[i]);
             if (!entry) {
-                throw new Error(`Entry "${path[i]}" in path "${path.join('/')}" does not exist.`);
+                throw new StorageError(`Entry "${path[i]}" in path "${path.join('/')}" does not exist.`);
             }
             if (i < path.length - 1) {
                 if (!(entry instanceof StorageDirectory)) {
-                    throw new Error(`Entry "${path[i]}" in path "${path.join('/')}" is not a directory.`);
+                    throw new StorageError(`Entry "${path[i]}" in path "${path.join('/')}" is not a directory.`);
                 }
                 current = entry;
             }

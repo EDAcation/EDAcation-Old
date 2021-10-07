@@ -1,4 +1,4 @@
-import {Box, Button, Heading, Spinner} from '@primer/components';
+import {Box, Button, ButtonClose, Heading, Spinner} from '@primer/components';
 import React, {useEffect, useState} from 'react';
 
 import {Storage, StorageDirectory} from '../../storage';
@@ -7,9 +7,10 @@ import {Directory} from './Directory';
 
 export interface StorageProps {
     storage: Storage<unknown, unknown>;
+    onRemove?: (storage: Storage<unknown, unknown>) => void;
 }
 
-export const StorageListItem: React.FC<StorageProps> = ({storage}) => {
+export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => {
     const [hasPermission, setHasPermission] = useState(false);
     const [root, setRoot] = useState<StorageDirectory<unknown, unknown> | undefined>(undefined);
 
@@ -24,13 +25,23 @@ export const StorageListItem: React.FC<StorageProps> = ({storage}) => {
         setHasPermission(await storage.requestPermission());
     };
 
+    const handleRemoveClick = () => {
+        if (onRemove) {
+            onRemove(storage);
+        }
+    };
+
     return (
         <>
             <Box px={1}>
-                <Heading fontSize={2} p={1}>
-                    {storage.getName()}
-                    {root && ` (${root.name})`}
-                </Heading>
+                <Box as={Heading} fontSize={2} p={1} display="flex" justifyContent="space-between" alignItems="center">
+                    <span>
+                        {storage.getName()}
+                        {root && ` (${root.getName()})`}
+                    </span>
+
+                    <ButtonClose onClick={handleRemoveClick} />
+                </Box>
 
                 {!hasPermission && <Button onClick={handlePermissionClick}>Grant permission</Button>}
                 {hasPermission && !root && <Spinner />}

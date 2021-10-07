@@ -16,10 +16,10 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
 
     const sortedEntries = useMemo(() => {
         return entries?.sort((a, b) => {
-            if (a.type !== b.type) {
-                return a.type < b.type ? -1 : 1;
+            if (a.getType() !== b.getType()) {
+                return a.getType() < b.getType() ? -1 : 1;
             }
-            return a.name < b.name ? -1 : 1;
+            return a.getName() < b.getName() ? -1 : 1;
         });
     }, [entries]);
 
@@ -34,7 +34,7 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
         <>
             <Text onClick={handleClick} style={{cursor: 'pointer', userSelect: 'none'}}>
                 <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} mr={1} />
-                {directory.name}
+                {directory.getName()}
             </Text>
 
             {isOpen && sortedEntries && (
@@ -46,11 +46,11 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
                         } else if (entry instanceof StorageFile) {
                             component = <File file={entry} />;
                         } else {
-                            throw new Error(`Unknown storage entry type "${entry.type}".`);
+                            throw new Error(`Unknown storage entry type "${entry.getType()}".`);
                         }
 
                         return (
-                            <Box key={entry.name} pl={3}>{component}</Box>
+                            <Box key={entry.getName()} pl={3}>{component}</Box>
                         );
                     })}
                 </Box>

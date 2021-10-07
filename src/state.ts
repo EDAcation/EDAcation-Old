@@ -3,33 +3,40 @@ import {get, set} from 'idb-keyval';
 import {Storage, storageByType, StorageFile} from './storage';
 
 export interface EditorFile {
-    file: StorageFile<unknown, unknown>;
+    storage: Storage<unknown, unknown>;
+    path: string[];
+    file?: StorageFile<unknown, unknown>;
+    content?: string;
 }
 
 export interface State {
+    loading: boolean;
+    storages: Storage<unknown, unknown>[];
     editor: {
         files: EditorFile[];
     };
-    storages: Storage<unknown, unknown>[];
 }
 
 export const DEFAULT_STATE: State = {
+    loading: true,
+    storages: [],
     editor: {
         files: []
-    },
-    storages: []
+    }
 };
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const loadState = async (): Promise<State> => {
+    const state = {
+        ...DEFAULT_STATE,
+        loading: false
+    };
+
     // Load state from IndexedDB
     const serializedState = await get('state');
     if (!serializedState) {
-        return DEFAULT_STATE;
+        return state;
     }
-
-    // Deserialize state
-    const state = DEFAULT_STATE;
 
     // Deserialize storages
     state.storages = (serializedState.storages as any[])
@@ -54,7 +61,8 @@ export const loadState = async (): Promise<State> => {
             }
 
             state.editor.files.push({
-                file: await storage.getEntry(serializedFile.path as string[])
+                storage,
+                path: serializedFile.file.path as string[]
             });
         }
     }
@@ -69,10 +77,10 @@ export const storeState = async (state: State) => {
         ...state,
         editor: {
             ...state.editor,
-            // TODO
             files: state.editor.files.map((file) => ({
                 file: {
-                    // storageId:
+                    storageId: file.storage.getID(),
+                    path: file.path
                 }
             }))
         },

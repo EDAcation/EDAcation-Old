@@ -6,7 +6,7 @@ import {StateProvider} from './state/StateContext';
 
 export const Root = () => {
     return (
-        <ThemeProvider colorMode="night">
+        <ThemeProvider colorMode="night" nightScheme="dark_dimmed">
             <BaseStyles>
                 <StateProvider>
                     <App />

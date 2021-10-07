@@ -1,15 +1,19 @@
-import {Storage, StorageDirectory, StorageEntry, StorageFile} from './Storage';
+import {Storage, StorageDirectory, StorageEntry, StorageError, StorageFile} from './Storage';
 import {StorageType} from './StorageType';
 
 export type StorageEntryFSA = StorageEntry<FileSystemDirectoryHandle, FileSystemFileHandle>;
 
 export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHandle, FileSystemFileHandle> {
 
+    protected storage: StorageFSA;
     private _entries?: StorageEntryFSA[];
 
-    constructor(handle: FileSystemDirectoryHandle) {
-        super(handle);
-        this.name = handle.name;
+    constructor(storage: StorageFSA, parent: StorageDirectoryFSA | null, handle: FileSystemDirectoryHandle) {
+        super(storage, parent, handle);
+    }
+
+    getName() {
+        return this.handle.name;
     }
 
     async getEntries(force?: boolean) {
@@ -20,9 +24,9 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
         const entries: StorageEntryFSA[] = [];
         for await (const handle of this.handle.values()) {
             if (handle.kind === 'directory') {
-                entries.push(new StorageDirectoryFSA(handle));
+                entries.push(new StorageDirectoryFSA(this.storage, this, handle));
             } else {
-                entries.push(new StorageFileFSA(handle, this));
+                entries.push(new StorageFileFSA(this.storage, this, handle));
             }
         }
 
@@ -30,31 +34,43 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
         return entries;
     }
 
-    async getEntry(name: string) {
-        const entries = await this.getEntries();
-        return entries.find((entry) => entry.name === name);
+    async getEntry(name: string, force?: boolean) {
+        const entries = await this.getEntries(force);
+        return entries.find((entry) => entry.getName() === name);
     }
 
     async createDirectory(name: string) {
         const handle = await this.handle.getDirectoryHandle(name, {
             create: true
         });
-        return new StorageDirectoryFSA(handle);
+        return new StorageDirectoryFSA(this.storage, this, handle);
     }
 
     async createFile(name: string) {
         const handle = await this.handle.getFileHandle(name, {
             create: true
         });
-        return new StorageFileFSA(handle, this);
+        return new StorageFileFSA(this.storage, this, handle);
+    }
+
+    async delete() {
+        if (!this.parent) {
+            throw new StorageError('Can\'t delete root directory.');
+        }
+        await this.parent.getHandle().removeEntry(this.handle.name);
     }
 }
 
 export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileSystemFileHandle> {
 
-    constructor(handle: FileSystemFileHandle, parent: StorageDirectoryFSA) {
-        super(handle, parent);
-        this.name = handle.name;
+    protected storage: StorageFSA;
+
+    constructor(storage: StorageFSA, parent: StorageDirectoryFSA, handle: FileSystemFileHandle) {
+        super(storage, parent, handle);
+    }
+
+    getName() {
+        return this.handle.name;
     }
 
     async read() {
@@ -69,7 +85,7 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
     }
 
     async delete() {
-        await this.parent.handle.removeEntry(this.handle.name);
+        await this.parent.getHandle().removeEntry(this.handle.name);
     }
 }
 
@@ -95,12 +111,12 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
 
     serialize() {
         return {
-            handle: this.root.handle
+            handle: this.root.getHandle()
         };
     }
 
     deserialize(data: Record<string, unknown>) {
-        this.root = new StorageDirectoryFSA(data.handle as FileSystemDirectoryHandle);
+        this.root = new StorageDirectoryFSA(this, null, data.handle as FileSystemDirectoryHandle);
     }
 
     async getRoot(): Promise<StorageDirectoryFSA> {
@@ -108,15 +124,15 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
     }
 
     async hasPermission(): Promise<boolean> {
-        return await this.root.handle.queryPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
+        return await this.root.getHandle().queryPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 
     async requestPermission(): Promise<boolean> {
-        return await this.root.handle.requestPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
+        return await this.root.getHandle().requestPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 
     async add() {
-        this.root = new StorageDirectoryFSA(await window.showDirectoryPicker());
+        this.root = new StorageDirectoryFSA(this, null, await window.showDirectoryPicker());
 
         if (!await this.hasPermission()) {
             await this.requestPermission();
