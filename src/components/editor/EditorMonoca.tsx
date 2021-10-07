@@ -21,11 +21,9 @@ export const EditorMonaco: React.FC<EditorMonacoProps> = ({file}) => {
         }
     }, [file]);
 
-    console.log(file);
-
     return (
         <MonacoEditor
-            language="json"
+            path={[file.storage.getID()].concat(file.path).join('/')}
             theme="vs-dark"
             value={value}
             onChange={(newValue) => setValue(newValue || value)}
