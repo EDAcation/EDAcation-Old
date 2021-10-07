@@ -960,6 +960,11 @@
   resolved "https://registry.yarnpkg.com/@primer/octicons-react/-/octicons-react-16.0.0.tgz#964cf7eac896cf2afdc79dcdd900e6f7471424be"
   integrity sha512-1/DszHbG39lJO5w5el/Eej3Qu2TW0ecDDeYGq5T1cwNsgCWgJmtk2bmyPYJRQyRtGzRQQ8db03E8OeM7ATPSbQ==
 
+"@primer/primitives@4.6.2":
+  version "4.6.2"
+  resolved "https://registry.yarnpkg.com/@primer/primitives/-/primitives-4.6.2.tgz#6d78307b50e6e9eb37ac8679d6f33f424ff7cb34"
+  integrity sha512-KhscXdTgtn+JW+oO25FtkJpcWn+eLitYHbm00V6CebHqvFioKoWnEtF4a6X5aG+GB+NsXRYg/b8RpAFQC61rLQ==
+
 "@primer/primitives@4.8.1":
   version "4.8.1"
   resolved "https://registry.yarnpkg.com/@primer/primitives/-/primitives-4.8.1.tgz#05f76e47f67018514fd54b35ca615b9d27ef2a46"
@@ -2614,13 +2619,6 @@ eslint-plugin-import@^2.23.4:
     resolve "^1.20.0"
     tsconfig-paths "^3.11.0"
 
-eslint-plugin-primer-react@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-primer-react/-/eslint-plugin-primer-react-0.5.0.tgz#ae2f90ceb57877dcb03e8e08bda8c3245f2b35cf"
-  integrity sha512-WmDoNuQ7D0tU7DEtZg3JmkfVhatX286lMiMpqg/5vBnkXUMZorTFUjCeRvjGLK62iSALVcrRbVvDIRIsfK/W/A==
-  dependencies:
-    eslint-traverse "^1.0.0"
-
 eslint-scope@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-5.1.1.tgz#e786e59a66cb92b3f6c1fb0d508aab174848f48c"
@@ -2628,11 +2626,6 @@ eslint-scope@^5.1.1:
   dependencies:
     esrecurse "^4.3.0"
     estraverse "^4.1.1"
-
-eslint-traverse@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/eslint-traverse/-/eslint-traverse-1.0.0.tgz#108d360a171a6e6334e1af0cee905a93bd0dcc53"
-  integrity sha512-bSp37rQs93LF8rZ409EI369DGCI4tELbFVmFNxI6QbuveS7VRxYVyUhwDafKN/enMyUh88HQQ7ZoGUHtPuGdcw==
 
 eslint-utils@^2.1.0:
   version "2.1.0"
