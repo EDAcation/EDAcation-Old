@@ -12,23 +12,28 @@ export const Editor: React.FC = () => {
     // Open files when needed
     useEffect(() => {
         (async () => {
-            // TODO: when no permission is available this keeps updating the files array, which should not happen
-
+            // Check if any files need to be loaded
             if (state.editor.files.some((file) => !file.file || !file.content)) {
                 const files: EditorFile[] = [];
+                let shouldUpdate = false;
+
+                // Loop over open files
                 for (const file of state.editor.files) {
                     if (!file.file) {
+                        // Check if the storage has permission, otherwise wait
                         if (!await file.storage.hasPermission()) {
                             files.push(file);
                             continue;
                         }
 
                         try {
+                            // Find file in storage
                             file.file = await file.storage.getEntry(file.path);
                         } catch (err) {
                             if (err instanceof StorageError) {
                                 // This file no longer exists, so don't add the file back to the list
                                 console.error(err);
+                                shouldUpdate = true;
                                 continue;
                             }
                             throw err;
@@ -36,21 +41,25 @@ export const Editor: React.FC = () => {
                     }
 
                     if (!file.content) {
+                        // Read file from storage
                         files.push({
                             ...file,
                             content: await file.file?.read()
                         });
+                        shouldUpdate = true;
                     } else {
                         files.push(file);
                     }
                 }
 
-                await updateState({
-                    editor: {
-                        ...state.editor,
-                        files
-                    }
-                });
+                if (shouldUpdate) {
+                    await updateState({
+                        editor: {
+                            ...state.editor,
+                            files
+                        }
+                    });
+                }
 
             }
         })();

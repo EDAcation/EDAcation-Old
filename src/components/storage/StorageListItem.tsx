@@ -1,7 +1,8 @@
 import {Box, Button, ButtonClose, Heading, Spinner} from '@primer/components';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
 import {Storage, StorageDirectory} from '../../storage';
+import {StateContext} from '../state/StateContext';
 
 import {Directory} from './Directory';
 
@@ -11,6 +12,7 @@ export interface StorageProps {
 }
 
 export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => {
+    const [state, updateState] = useContext(StateContext);
     const [hasPermission, setHasPermission] = useState(false);
     const [root, setRoot] = useState<StorageDirectory<unknown, unknown> | undefined>(undefined);
 
@@ -22,7 +24,15 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
     }, [hasPermission]);
 
     const handlePermissionClick = async () => {
-        setHasPermission(await storage.requestPermission());
+        const result = await storage.requestPermission();
+        setHasPermission(result);
+
+        if (result) {
+            // Force state update for storages
+            await updateState({
+                storages: [...state.storages]
+            });
+        }
     };
 
     const handleRemoveClick = () => {
