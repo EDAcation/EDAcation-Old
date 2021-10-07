@@ -12,14 +12,16 @@ export const Main = () => {
     const [state] = useContext(StateContext);
 
     return (
-        <main>
+        <main style={{height: 'calc(100vh - 3rem)'}}>
             <Box backgroundColor="canvas.default">
                 {state.loading && <Spinner />}
 
                 {!state.loading && (
                     <SplitPane split="vertical">
                         <Pane minSize="5%" initialSize="20%">
-                            <StorageList />
+                            <Box height="100%" overflowY="auto">
+                                <StorageList />
+                            </Box>
                         </Pane>
                         <Pane minSize="5%">
                             <Tabs />
