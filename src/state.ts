@@ -2,6 +2,11 @@ import {get, set} from 'idb-keyval';
 
 import {Storage, storageByType, StorageFile} from './storage';
 
+/* TODO: This entire architecture is basically just Redux.
+         It probably makes sense to complete the pattern, by changing [state, updateState] to dispatch and random updateState calls to actions.
+         Optionally, actually use Redux and hook into it for storing to IndexedDB.
+*/
+
 export interface EditorFile {
     id: string;
     storage: Storage<unknown, unknown>;
