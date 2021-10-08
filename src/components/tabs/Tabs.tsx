@@ -1,5 +1,4 @@
-import {ButtonClose, StyledOcticon, TabNav, Text} from '@primer/components';
-import {CircleIcon} from '@primer/octicons-react';
+import {ButtonClose, TabNav, Text} from '@primer/components';
 import React, {MouseEvent, useContext} from 'react';
 
 import {EditorFile} from '../../state';

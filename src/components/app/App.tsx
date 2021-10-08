@@ -14,7 +14,7 @@ export const App = () => {
 
     useEffect(() => {
         setColorMode(state.theme === 'light' ? 'day' : 'night');
-    }, [state.theme]);
+    }, [state.theme, setColorMode]);
 
     return (
         <>

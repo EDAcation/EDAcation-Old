@@ -21,7 +21,7 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
             setHasPermission(await storage.hasPermission());
             setRoot(await storage.getRoot());
         })();
-    }, [hasPermission]);
+    }, [storage, hasPermission, setHasPermission, setRoot]);
 
     const handlePermissionClick = async () => {
         const result = await storage.requestPermission();

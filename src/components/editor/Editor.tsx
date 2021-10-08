@@ -67,7 +67,9 @@ export const Editor: React.FC = () => {
 
             }
         })();
-    }, [state.editor.files, state.storages]);
+    }, [state.editor, state.storages, updateState]);
+
+    // TODO: These three hooks still depend on state.editor and will therefore not work. Consider using useReducer to fix it maybe?
 
     const handleFileUpdate = useMemo(() => async (file: EditorFileOpened, handler: () => Promise<EditorFileOpened>) => {
         const updatedFile = await handler();
