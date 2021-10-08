@@ -1,7 +1,7 @@
 import {Box, Spinner, Text} from '@primer/components';
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useMemo} from 'react';
 
-import {EditorFile} from '../../state';
+import {EditorFile, EditorFileOpened} from '../../state';
 import {StorageError} from '../../storage';
 import {StateContext} from '../state/StateContext';
 
@@ -14,7 +14,7 @@ export const Editor: React.FC = () => {
     useEffect(() => {
         (async () => {
             // Check if any files need to be loaded
-            if (state.editor.files.some((file) => !file.file || !file.content)) {
+            if (state.editor.files.some((file) => !file.file || !file.originalContent)) {
                 const files: EditorFile[] = [];
                 let shouldUpdate = false;
 
@@ -41,12 +41,14 @@ export const Editor: React.FC = () => {
                         }
                     }
 
-                    if (!file.content) {
+                    if (!file.originalContent) {
                         // Read file from storage
-                        console.log(file.file);
+                        const content = await file.file?.read();
                         files.push({
                             ...file,
-                            content: await file.file?.read()
+                            originalContent: content,
+                            content,
+                            isSaved: true
                         });
                         shouldUpdate = true;
                     } else {
@@ -67,6 +69,55 @@ export const Editor: React.FC = () => {
         })();
     }, [state.editor.files, state.storages]);
 
+    const handleFileUpdate = useMemo(() => async (file: EditorFileOpened, handler: () => Promise<EditorFileOpened>) => {
+        const updatedFile = await handler();
+
+        await updateState({
+            editor: {
+                ...state.editor,
+                files: state.editor.files.map((f) => {
+                    if (f.id === file.id) {
+                        return updatedFile;
+                    }
+                    return f;
+                })
+            }
+        });
+    }, [updateState]);
+
+    const handleSave = useMemo(() => (file: EditorFileOpened) => handleFileUpdate(file, async () => {
+        // Read file from storage to check if it changed
+        const currentContent = await file.file.read();
+        if (currentContent !== file.originalContent) {
+            // TODO: replace with Primer React popup
+
+            if (!window.confirm('File content was changed by another program. Do you want to override the changes?')) {
+                return {
+                    ...file,
+                    isSaved: file.content === currentContent
+                };
+            }
+        }
+
+        // Write file to storage
+        await file.file.write(file.content);
+
+        return {
+            ...file,
+            originalContent: file.content,
+            content: file.content,
+            isSaved: true
+        };
+    }), []);
+
+    const handleChange = useMemo(() => (file: EditorFileOpened, newContent: string) => handleFileUpdate(file, async () => {
+        return {
+            ...file,
+            content: newContent,
+            isSaved: newContent === file.originalContent
+        };
+    }), []);
+
     const file = state.editor.files.length > 0 ? state.editor.files.find((file) => file.id === state.editor.openFileId) : null;
 
     if (!file) {
@@ -81,7 +132,7 @@ export const Editor: React.FC = () => {
         );
     }
 
-    if (!file.content) {
+    if (!file.originalContent || !file.content) {
         return (
             <Box p={2}>
                 <Spinner />;
@@ -89,7 +140,9 @@ export const Editor: React.FC = () => {
         );
     }
 
+    const openedFile = file as EditorFileOpened;
+
     return (
-        <EditorMonaco file={file} />
+        <EditorMonaco file={openedFile} value={openedFile.content} onChange={handleChange} onSave={handleSave} />
     );
 };

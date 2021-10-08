@@ -1,5 +1,6 @@
-import {ButtonClose, TabNav} from '@primer/components';
-import React, {isValidElement, MouseEvent, useContext} from 'react';
+import {ButtonClose, StyledOcticon, TabNav, Text} from '@primer/components';
+import {CircleIcon} from '@primer/octicons-react';
+import React, {MouseEvent, useContext} from 'react';
 
 import {EditorFile} from '../../state';
 import {StateContext} from '../state/StateContext';
@@ -21,6 +22,14 @@ export const Tabs: React.FC = () => {
     const handleClose = async (file: EditorFile, index: number, event: MouseEvent) => {
         event.stopPropagation();
 
+        if (!file.isSaved) {
+            // TODO: replace with Primer React popup
+
+            if (!window.confirm('You have unsaved changes. Are you sure you want to close this file?')) {
+                return;
+            }
+        }
+
         const files = state.editor.files.filter((f) => f.id !== file.id);
 
         await updateState({
@@ -41,7 +50,10 @@ export const Tabs: React.FC = () => {
                     onClick={handleClick.bind(this, file)}
                     style={{cursor: 'pointer', userSelect: 'none'}}
                 >
-                    {file.path[file.path.length - 1]}
+                    <Text>
+                        {file.path[file.path.length - 1]}
+                        {!file.isSaved && ' ⏺'}
+                    </Text>
 
                     <ButtonClose pl={1} onClick={handleClose.bind(this, file, index)} />
                 </TabNav.Link>

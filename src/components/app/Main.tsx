@@ -11,6 +11,8 @@ import {Tabs} from '../tabs/Tabs';
 export const Main = () => {
     const [state] = useContext(StateContext);
 
+    // TODO: replace react-split-pane with an up-to-date library
+
     return (
         <main style={{height: 'calc(100vh - 3rem)'}}>
             <Box height="100%" backgroundColor="canvas.default">

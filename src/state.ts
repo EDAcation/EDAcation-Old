@@ -7,8 +7,16 @@ export interface EditorFile {
     storage: Storage<unknown, unknown>;
     path: string[];
     file?: StorageFile<unknown, unknown>;
+    originalContent?: string;
     content?: string;
+    isSaved: boolean;
 }
+
+export type EditorFileOpened = EditorFile & {
+    file: NonNullable<EditorFile['file']>;
+    originalContent: NonNullable<EditorFile['originalContent']>;
+    content: NonNullable<EditorFile['content']>;
+};
 
 export interface State {
     loading: boolean;
@@ -76,7 +84,8 @@ export const loadState = async (): Promise<State> => {
             state.editor.files.push({
                 id: serializedFile.file.id,
                 storage,
-                path: serializedFile.file.path
+                path: serializedFile.file.path,
+                isSaved: true
             });
         }
     }
