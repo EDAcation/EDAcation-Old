@@ -54,7 +54,7 @@ export const Tabs: React.FC = () => {
                         {!file.isSaved && ' ⏺'}
                     </Text>
 
-                    <ButtonClose pl={1} onClick={handleClose.bind(this, file, index)} />
+                    <ButtonClose sx={{pl: 1}} onClick={handleClose.bind(this, file, index)} />
                 </TabNav.Link>
             ))}
         </TabNav>

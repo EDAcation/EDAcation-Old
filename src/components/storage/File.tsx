@@ -25,7 +25,8 @@ export const File: React.FC<FileProps> = ({file}) => {
                         id,
                         storage: file.getStorage(),
                         path: file.getPath(),
-                        file
+                        file,
+                        isSaved: true
                     }
                 ],
                 openFileId: id
@@ -35,7 +36,7 @@ export const File: React.FC<FileProps> = ({file}) => {
 
     return (
         <Text style={{cursor: 'pointer', userSelect: 'none'}} onClick={handleClick}>
-            <StyledOcticon icon={FileIcon} mr={1} />
+            <StyledOcticon icon={FileIcon} sx={{mr: 1}} />
             {file.getName()}
         </Text>
     );

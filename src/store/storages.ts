@@ -12,8 +12,11 @@ export const storagesSlice = createSlice({
     reducers: {
         addStorage(state, action: PayloadAction<Storage<unknown, unknown>>) {
             state.push(action.payload);
+        },
+        removeStorage(state, action: PayloadAction<Storage<unknown, unknown>>) {
+            return state.filter((storage) => storage.getID() !== action.payload.getID());
         }
     }
 });
 
-export const {addStorage} = storagesSlice.actions;
+export const {addStorage, removeStorage} = storagesSlice.actions;

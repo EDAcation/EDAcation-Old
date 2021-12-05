@@ -1,40 +1,40 @@
 import {Box, Text} from '@primer/components';
-import React, {useContext} from 'react';
+import React from 'react';
 
 import {storageByType, Storage, StorageType} from '../../storage';
-import {StateContext} from '../state/StateContext';
+import {useAppDispatch, useAppSelector} from '../../store';
+import {addStorage, removeStorage} from '../../store/storages';
 
 import {AddStorageButton} from './AddStorageButton';
 import {StorageListItem} from './StorageListItem';
 
 export const StorageList: React.FC = () => {
-    const [state, updateState] = useContext(StateContext);
+    const dispatch = useAppDispatch();
+    const storages = useAppSelector((state) => state.storages);
 
     const handleAdd = async (type: StorageType) => {
         const storage = new storageByType[type]();
         await storage.add();
 
-        await updateState({
-            storages: [
-                ...state.storages,
-                storage
-            ]
-        });
+        dispatch(addStorage(storage));
     };
 
     const handleRemove = async (storage: Storage<unknown, unknown>) => {
-        await updateState({
-            editor: {
-                ...state.editor,
-                files: state.editor.files.filter((f) => f.storage !== storage)
-            },
-            storages: state.storages.filter((s) => s !== storage)
-        });
+        // TODO: removeStorage does not yet close files from this storage
+        dispatch(removeStorage(storage));
+
+        // await updateState({
+        //     editor: {
+        //         ...state.editor,
+        //         files: state.editor.files.filter((f) => f.storage !== storage)
+        //     },
+        //     storages: state.storages.filter((s) => s !== storage)
+        // });
     };
 
     return (
         <>
-            {state.storages.length === 0 && (
+            {storages.length === 0 && (
                 <Box px={1} py={2}>
                     <Text display="block" mb={1}>No storage providers available.</Text>
 
@@ -44,7 +44,7 @@ export const StorageList: React.FC = () => {
                 </Box>
             )}
 
-            {state.storages.map((storage) => <StorageListItem key={storage.getType()} storage={storage} onRemove={handleRemove} />)}
+            {storages.map((storage) => <StorageListItem key={storage.getType()} storage={storage} onRemove={handleRemove} />)}
         </>
     );
 };

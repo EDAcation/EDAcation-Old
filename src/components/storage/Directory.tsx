@@ -33,7 +33,7 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
     return (
         <>
             <Text onClick={handleClick} style={{cursor: 'pointer', userSelect: 'none'}}>
-                <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} mr={1} />
+                <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} sx={{mr: 1}} />
                 {directory.getName()}
             </Text>
 
