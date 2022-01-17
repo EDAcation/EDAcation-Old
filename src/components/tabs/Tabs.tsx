@@ -2,20 +2,23 @@ import {ButtonClose, TabNav, Text} from '@primer/components';
 import React, {MouseEvent, useContext} from 'react';
 
 import {EditorFile} from '../../state';
-import {StateContext} from '../state/StateContext';
+import {useAppDispatch, useAppSelector} from '../../store';
+import {removeFile, updateFile} from '../../store/files';
 
 export const Tabs: React.FC = () => {
-    const [state, updateState] = useContext(StateContext);
+    const dispatch = useAppDispatch();
+    const files = useAppSelector((state) => state.files);
 
     // TODO: https://github.com/atlassian/react-beautiful-dnd
 
     const handleClick = async (file: EditorFile) => {
-        await updateState({
-            editor: {
-                ...state.editor,
-                openFileId: file.id
-            }
-        });
+        // TODO: handle open file ID
+        // await updateState({
+        //     editor: {
+        //         ...state.editor,
+        //         openFileId: file.id
+        //     }
+        // });
     };
 
     const handleClose = async (file: EditorFile, index: number, event: MouseEvent) => {
@@ -29,23 +32,29 @@ export const Tabs: React.FC = () => {
             }
         }
 
-        const files = state.editor.files.filter((f) => f.id !== file.id);
+        dispatch(removeFile(file));
 
-        await updateState({
-            editor: {
-                ...state.editor,
-                files,
-                openFileId: state.editor.openFileId === file.id ? file.id : files[Math.min(Math.max(0, index - 1), files.length - 1)].id
-            }
-        });
+        // TODO: handle open file ID
+
+        // const files = state.editor.files.filter((f) => f.id !== file.id);
+
+        // await updateState({
+        //     editor: {
+        //         ...state.editor,
+        //         files,
+        //         openFileId: state.editor.openFileId === file.id ? file.id : files[Math.min(Math.max(0, index - 1), files.length - 1)].id
+        //     }
+        // });
     };
 
     return (
         <TabNav>
-            {state.editor.files.map((file, index) => (
+            {files.map((file, index) => (
                 <TabNav.Link
                     key={index}
-                    selected={file.id === state.editor.openFileId}
+                    // TODO: handle open file ID
+                    // selected={file.id === state.editor.openFileId}
+                    selected={index === 0}
                     onClick={handleClick.bind(this, file)}
                     style={{cursor: 'pointer', userSelect: 'none'}}
                 >

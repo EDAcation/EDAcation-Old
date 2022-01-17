@@ -1,29 +1,31 @@
 import {Box, Spinner, Text} from '@primer/components';
-import React, {useContext, useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo} from 'react';
 
 import {EditorFile, EditorFileOpened} from '../../state';
 import {StorageError} from '../../storage';
-import {StateContext} from '../state/StateContext';
+import {useAppDispatch, useAppSelector} from '../../store';
+import {removeFile, updateFile} from '../../store/files';
 
 import {EditorMonaco} from './EditorMonoca';
 
 export const Editor: React.FC = () => {
-    const [state, updateState] = useContext(StateContext);
+    const dispatch = useAppDispatch();
+    const files = useAppSelector((state) => state.files);
 
     // Open files when needed
     useEffect(() => {
         (async () => {
             // Check if any files need to be loaded
-            if (state.editor.files.some((file) => !file.file || !file.originalContent)) {
-                const files: EditorFile[] = [];
-                let shouldUpdate = false;
+            if (files.some((file) => !file.file || !file.originalContent)) {
+                // const newFiles: EditorFile[] = [];
+                // let shouldUpdate = false;
 
                 // Loop over open files
-                for (const file of state.editor.files) {
+                for (const file of files) {
                     if (!file.file) {
                         // Check if the storage has permission, otherwise wait
                         if (!await file.storage.hasPermission()) {
-                            files.push(file);
+                            // newFiles.push(file);
                             continue;
                         }
 
@@ -34,7 +36,10 @@ export const Editor: React.FC = () => {
                             if (err instanceof StorageError) {
                                 // This file no longer exists, so don't add the file back to the list
                                 console.error(err);
-                                shouldUpdate = true;
+                                // shouldUpdate = true;
+
+                                dispatch(removeFile(file));
+
                                 continue;
                             }
                             throw err;
@@ -44,48 +49,57 @@ export const Editor: React.FC = () => {
                     if (!file.originalContent) {
                         // Read file from storage
                         const content = await file.file?.read();
-                        files.push({
+
+                        dispatch(updateFile({
                             ...file,
                             originalContent: content,
                             content,
                             isSaved: true
-                        });
-                        shouldUpdate = true;
+                        }));
+
+                        // newFiles.push({
+                        //     ...file,
+                        //     originalContent: content,
+                        //     content,
+                        //     isSaved: true
+                        // });
+                        // shouldUpdate = true;
                     } else {
-                        files.push(file);
+                        // newFiles.push(file);
                     }
                 }
 
-                if (shouldUpdate) {
-                    await updateState({
-                        editor: {
-                            ...state.editor,
-                            files
-                        }
-                    });
-                }
-
+                // if (shouldUpdate) {
+                //     await updateState({
+                //         editor: {
+                //             ...state.editor,
+                //             files: newFiles
+                //         }
+                //     });
+                // }
             }
         })();
-    }, [state.editor, state.storages, updateState]);
+    }, [files, dispatch]);
 
     // TODO: These three hooks still depend on state.editor and will therefore not work. Consider using useReducer to fix it maybe?
 
     const handleFileUpdate = useMemo(() => async (file: EditorFileOpened, handler: () => Promise<EditorFileOpened>) => {
         const updatedFile = await handler();
 
-        await updateState({
-            editor: {
-                ...state.editor,
-                files: state.editor.files.map((f) => {
-                    if (f.id === file.id) {
-                        return updatedFile;
-                    }
-                    return f;
-                })
-            }
-        });
-    }, [updateState]);
+        dispatch(updateFile(updatedFile));
+
+        // await updateState({
+        //     editor: {
+        //         ...state.editor,
+        //         files: state.editor.files.map((f) => {
+        //             if (f.id === file.id) {
+        //                 return updatedFile;
+        //             }
+        //             return f;
+        //         })
+        //     }
+        // });
+    }, [dispatch]);
 
     const handleSave = useMemo(() => (file: EditorFileOpened) => handleFileUpdate(file, async () => {
         // Read file from storage to check if it changed
@@ -120,7 +134,8 @@ export const Editor: React.FC = () => {
         };
     }), []);
 
-    const file = state.editor.files.length > 0 ? state.editor.files.find((file) => file.id === state.editor.openFileId) : null;
+    // const file = state.editor.files.length > 0 ? state.editor.files.find((file) => file.id === state.editor.openFileId) : null;
+    const file = files.length > 0 ? files[0] : null;
 
     if (!file) {
         return <></>;

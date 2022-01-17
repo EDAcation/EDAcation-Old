@@ -2,10 +2,12 @@ import {configureStore} from '@reduxjs/toolkit';
 import {useDispatch, useSelector, TypedUseSelectorHook} from 'react-redux';
 
 import {storagesSlice} from './storages';
+import {filesSlice} from './files';
 
 export const store = configureStore({
     reducer: {
-        storages: storagesSlice.reducer
+        storages: storagesSlice.reducer,
+        files: filesSlice.reducer
     }
 });
 
