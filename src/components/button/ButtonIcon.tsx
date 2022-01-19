@@ -1,7 +1,7 @@
 import {Icon as IconType} from '@primer/octicons-react';
-import {COMMON, get, LAYOUT, SystemCommonProps, SystemLayoutProps} from '@primer/components/lib-esm/constants';
-import sx, {SxProp} from '@primer/components/lib-esm/sx';
-import {ComponentProps} from '@primer/components/lib-esm/utils/types';
+import {COMMON, get, LAYOUT, SystemCommonProps, SystemLayoutProps} from '@primer/react/lib-esm/constants';
+import sx, {SxProp} from '@primer/react/lib-esm/sx';
+import {ComponentProps} from '@primer/react/lib-esm/utils/types';
 import React, {forwardRef} from 'react';
 import styled from 'styled-components';
 

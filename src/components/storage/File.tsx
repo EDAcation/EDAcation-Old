@@ -1,4 +1,4 @@
-import {StyledOcticon, Text} from '@primer/components';
+import {StyledOcticon, Text} from '@primer/react';
 import {FileIcon} from '@primer/octicons-react';
 import React from 'react';
 import {v4 as uuidv4} from 'uuid';

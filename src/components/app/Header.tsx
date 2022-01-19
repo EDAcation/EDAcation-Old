@@ -1,4 +1,4 @@
-import {Header as PrimerHeader} from '@primer/components';
+import {Header as PrimerHeader} from '@primer/react';
 import React from 'react';
 
 import {ThemeButton} from '../theme/ThemeButton';

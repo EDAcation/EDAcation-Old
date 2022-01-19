@@ -1,4 +1,4 @@
-import {ButtonClose, TabNav, Text} from '@primer/components';
+import {ButtonClose, TabNav, Text} from '@primer/react';
 import React, {MouseEvent, useContext} from 'react';
 
 import {EditorFile} from '../../state';

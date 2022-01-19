@@ -1,4 +1,4 @@
-import {Box, Spinner} from '@primer/components';
+import {Box, Spinner} from '@primer/react';
 import React, {useContext} from 'react';
 // @ts-expect-error: Outdated type declaration
 import {SplitPane, Pane} from '@deviousm/react-split-pane';

@@ -1,4 +1,4 @@
-import {Button, ButtonProps} from '@primer/components';
+import {Button, ButtonProps} from '@primer/react';
 import React from 'react';
 
 import {storageByType, StorageType} from '../../storage';

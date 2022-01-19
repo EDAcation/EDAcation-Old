@@ -1,4 +1,4 @@
-import {Box, StyledOcticon, Text} from '@primer/components';
+import {Box, StyledOcticon, Text} from '@primer/react';
 import {ChevronDownIcon, ChevronRightIcon} from '@primer/octicons-react';
 import React, {useMemo, useState} from 'react';
 

@@ -1,4 +1,4 @@
-import {Box, Spinner, Text} from '@primer/components';
+import {Box, Spinner, Text} from '@primer/react';
 import React, {useEffect, useMemo} from 'react';
 
 import {EditorFile, EditorFileOpened} from '../../state';

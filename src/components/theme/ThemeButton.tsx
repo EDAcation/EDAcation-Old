@@ -1,4 +1,4 @@
-import {Button, ButtonProps, StyledOcticon} from '@primer/components';
+import {Button, ButtonProps, StyledOcticon} from '@primer/react';
 import {MoonIcon, SunIcon} from '@primer/octicons-react';
 import React, {useContext} from 'react';
 

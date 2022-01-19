@@ -1,4 +1,4 @@
-import {BaseStyles, ThemeProvider} from '@primer/components';
+import {BaseStyles, ThemeProvider} from '@primer/react';
 import React from 'react';
 import {Provider} from 'react-redux';
 

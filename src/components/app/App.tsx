@@ -1,4 +1,4 @@
-import {useTheme} from '@primer/components';
+import {useTheme} from '@primer/react';
 import React, {useContext, useEffect} from 'react';
 import {Helmet} from 'react-helmet';
 

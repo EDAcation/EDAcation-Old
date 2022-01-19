@@ -1,4 +1,4 @@
-import {Box, Button, ButtonClose, Heading, Spinner} from '@primer/components';
+import {Box, Button, ButtonClose, Heading, Spinner} from '@primer/react';
 import React, {useEffect, useState} from 'react';
 
 import {Storage, StorageDirectory} from '../../storage';
