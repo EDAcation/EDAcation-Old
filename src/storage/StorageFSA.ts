@@ -124,10 +124,12 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
     }
 
     async hasPermission(): Promise<boolean> {
+        console.log(this.root.getHandle());
         return await this.root.getHandle().queryPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 
     async requestPermission(): Promise<boolean> {
+        console.log(this.root.getHandle());
         return await this.root.getHandle().requestPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 

@@ -1,17 +1,14 @@
 import {Box, Spinner} from '@primer/react';
+/* eslint-disable-next-line */
+import {Allotment} from 'allotment';
 import React, {useContext} from 'react';
-// @ts-expect-error: Outdated type declaration
-import {SplitPane, Pane} from '@deviousm/react-split-pane';
 
-import {Editor} from '../editor/Editor';
+import {Panel, PanelType} from '../panel/Panel';
 import {StorageList} from '../storage/StorageList';
 import {StateContext} from '../state/StateContext';
-import {Tabs} from '../tabs/Tabs';
 
 export const Main = () => {
     const [state] = useContext(StateContext);
-
-    // TODO: replace react-split-pane with an up-to-date library
 
     return (
         <main style={{height: 'calc(100vh - 3rem)'}}>
@@ -19,17 +16,17 @@ export const Main = () => {
                 {state.loading && <Spinner />}
 
                 {!state.loading && (
-                    <SplitPane split="vertical">
-                        <Pane minSize="5%" initialSize="20%">
+                    <Allotment defaultSizes={[1, 5]} minSize={100}>
+                        <Allotment.Pane>
                             <Box height="100%" overflowY="auto">
                                 <StorageList />
                             </Box>
-                        </Pane>
-                        <Pane minSize="5%">
-                            <Tabs />
-                            <Editor />
-                        </Pane>
-                    </SplitPane>
+                        </Allotment.Pane>
+                        <Allotment.Pane>
+
+                            <Panel type={PanelType.EDITOR} />
+                        </Allotment.Pane>
+                    </Allotment>
                 )}
             </Box>
         </main>

@@ -127,6 +127,10 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
     }
 }
 
+export interface StorageConstructor<DirectoryHandle, FileHandle> {
+    new (id?: string): Storage<DirectoryHandle, FileHandle>;
+}
+
 export abstract class Storage<DirectoryHandle, FileHandle> {
 
     private id: string;

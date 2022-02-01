@@ -124,7 +124,7 @@ export const Editor: React.FC = () => {
             content: file.content,
             isSaved: true
         };
-    }), []);
+    }), [handleFileUpdate]);
 
     const handleChange = useMemo(() => (file: EditorFileOpened, newContent: string) => handleFileUpdate(file, async () => {
         return {
@@ -132,7 +132,7 @@ export const Editor: React.FC = () => {
             content: newContent,
             isSaved: newContent === file.originalContent
         };
-    }), []);
+    }), [handleFileUpdate]);
 
     // const file = state.editor.files.length > 0 ? state.editor.files.find((file) => file.id === state.editor.openFileId) : null;
     const file = files.length > 0 ? files[0] : null;

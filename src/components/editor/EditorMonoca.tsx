@@ -21,6 +21,7 @@ export const EditorMonaco: React.FC<BaseEditorProps> = ({file, value, onChange, 
     latestFile = file;
 
     const handleMount: OnMount = (editor, monaco) => {
+        // @ts-expect-error: KEY_S does not exist on the type, but gives the correct value
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
             if (onSave) {
                 onSave(latestFile);

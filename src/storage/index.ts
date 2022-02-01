@@ -1,8 +1,8 @@
-import {Storage} from './Storage';
+import {StorageConstructor} from './Storage';
 import {StorageType} from './StorageType';
 import {StorageFSA} from './StorageFSA';
 
-export const storageByType: Record<StorageType, new () => Storage<unknown, unknown>> = {
+export const storageByType: Record<StorageType, StorageConstructor<unknown, unknown>> = {
     [StorageType.FILE_SYSTEM_ACCESS]: StorageFSA
 };
 
