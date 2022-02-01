@@ -53,18 +53,9 @@ export const store = configureStore({
     reducer: persistReducer({
         key: 'root',
         storage: {
-            getItem(key) {
-                console.log('get', key);
-                return get(key);
-            },
-            setItem(key, value) {
-                console.log('set', key, value);
-                return set(key, value);
-            },
-            removeItem(key) {
-                console.log('del', key);
-                return del(key);
-            }
+            getItem: (key) => get(key),
+            setItem: (key, value) => set(key, value),
+            removeItem: (key) => del(key)
         },
         transforms: [TransformStorages],
         serialize: false,
@@ -78,7 +69,7 @@ export const store = configureStore({
         },
         serializableCheck: {
             // Ignore redux-persist actions
-            ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+            ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
 
             // TODO: fix serialiability warnings by ignoring stuff here
         }
