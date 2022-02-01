@@ -18,6 +18,9 @@ interface ExporedStorage extends Record<string, unknown> {
     id: string;
 }
 
+// TODO: Create generic Serializable interface that allows all state keys to be (de)serialized properly.
+// TODO: Consider using serialize/deserialize functions of redux-persist instead of transforms.
+
 const TransformStorages = createTransform<Storage<unknown, unknown>[], ExporedStorage[]>(
     (inboundState) => {
         return inboundState.map((storage) => ({
@@ -75,7 +78,9 @@ export const store = configureStore({
         },
         serializableCheck: {
             // Ignore redux-persist actions
-            ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
+            ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+
+            // TODO: fix serialiability warnings by ignoring stuff here
         }
     })
 });
