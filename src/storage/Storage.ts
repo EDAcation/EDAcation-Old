@@ -1,5 +1,7 @@
 import {v4 as uuidv4} from 'uuid';
 
+import {getSerialId, serialize, deserialize, Serializable} from '../serializable';
+
 import {StorageType} from './StorageType';
 
 export class StorageError extends Error {}
@@ -9,16 +11,16 @@ export enum StorageEntryType {
     FILE = 'FILE'
 }
 
-export abstract class StorageEntry<DirectoryHandle, FileHandle> {
+export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized extends SerializedStorage> {
 
-    protected storage: Storage<DirectoryHandle, FileHandle>;
-    protected parent: StorageDirectory<DirectoryHandle, FileHandle> | null;
+    protected storage: Storage<DirectoryHandle, FileHandle, Serialized>;
+    protected parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized> | null;
     protected type: StorageEntryType;
     protected handle: DirectoryHandle | FileHandle;
 
     constructor(
-        storage: Storage<DirectoryHandle, FileHandle>,
-        parent: StorageDirectory<DirectoryHandle, FileHandle> | null,
+        storage: Storage<DirectoryHandle, FileHandle, Serialized>,
+        parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized> | null,
         handle: DirectoryHandle | FileHandle,
         type: StorageEntryType
     ) {
@@ -63,11 +65,16 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle> {
 
 // TODO: copy, move
 
-export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
+export abstract class StorageDirectory<DirectoryHandle, FileHandle, Serialized extends SerializedStorage>
+    extends StorageEntry<DirectoryHandle, FileHandle, Serialized> {
 
     protected handle: DirectoryHandle;
 
-    constructor(storage: Storage<DirectoryHandle, FileHandle>, parent: StorageDirectory<DirectoryHandle, FileHandle> | null, handle: DirectoryHandle) {
+    constructor(
+        storage: Storage<DirectoryHandle, FileHandle, Serialized>,
+        parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized> | null,
+        handle: DirectoryHandle
+    ) {
         super(storage, parent, handle, StorageEntryType.DIRECTORY);
     }
 
@@ -75,13 +82,13 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends Stor
         return this.handle;
     }
 
-    abstract getEntries(force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle>[]>;
+    abstract getEntries(force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle, Serialized>[]>;
 
-    abstract getEntry(name: string, force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle> | undefined>;
+    abstract getEntry(name: string, force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle, Serialized> | undefined>;
 
-    abstract createDirectory(name: string): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
+    abstract createDirectory(name: string): Promise<StorageDirectory<DirectoryHandle, FileHandle, Serialized>>;
 
-    abstract createFile(name: string): Promise<StorageFile<DirectoryHandle, FileHandle>>;
+    abstract createFile(name: string): Promise<StorageFile<DirectoryHandle, FileHandle, Serialized>>;
 
     async print(indent = '') {
         console.log(`${indent}${this.getName()} (${this.getType().substring(0, 1)})`);
@@ -97,12 +104,17 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle> extends Stor
     }
 }
 
-export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEntry<DirectoryHandle, FileHandle> {
+export abstract class StorageFile<DirectoryHandle, FileHandle, Serialized extends SerializedStorage>
+    extends StorageEntry<DirectoryHandle, FileHandle, Serialized> {
 
-    protected parent: StorageDirectory<DirectoryHandle, FileHandle>;
+    protected parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized>;
     protected handle: FileHandle;
 
-    constructor(storage: Storage<DirectoryHandle, FileHandle>, parent: StorageDirectory<DirectoryHandle, FileHandle>, handle: FileHandle) {
+    constructor(
+        storage: Storage<DirectoryHandle, FileHandle, Serialized>,
+        parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized>,
+        handle: FileHandle
+    ) {
         super(storage, parent, handle, StorageEntryType.FILE);
     }
 
@@ -127,11 +139,15 @@ export abstract class StorageFile<DirectoryHandle, FileHandle> extends StorageEn
     }
 }
 
-export interface StorageConstructor<DirectoryHandle, FileHandle> {
-    new (id?: string): Storage<DirectoryHandle, FileHandle>;
+export interface StorageConstructor<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage> {
+    new (id?: string): Storage<DirectoryHandle, FileHandle, Serialized>;
 }
 
-export abstract class Storage<DirectoryHandle, FileHandle> {
+export interface SerializedStorage {
+    id: string;
+}
+
+export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends SerializedStorage> implements Serializable<Serialized> {
 
     private id: string;
 
@@ -163,11 +179,21 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
         return (this.constructor as typeof Storage).getName();
     }
 
-    abstract serialize(): Record<string, unknown>;
+    abstract [getSerialId](): string;
 
-    abstract deserialize(data: Record<string, unknown>): void;
+    [serialize](): Serialized {
+        // @ts-expect-error: Technically a subclass could not override this method, which could cause type incompatibilities in the child,
+        //                   but this should not happen in practice.
+        return {
+            id: this.getID()
+        };
+    }
 
-    abstract getRoot(): Promise<StorageDirectory<DirectoryHandle, FileHandle>>;
+    [deserialize](data: Serialized) {
+        this.id = data.id;
+    }
+
+    abstract getRoot(): Promise<StorageDirectory<DirectoryHandle, FileHandle, Serialized>>;
 
     abstract hasPermission(): Promise<boolean>;
 
@@ -190,7 +216,7 @@ export abstract class Storage<DirectoryHandle, FileHandle> {
                 continue;
             }
 
-            return entry as StorageFile<unknown, unknown>;
+            return entry as StorageFile<unknown, unknown, Serialized>;
         }
         throw new Error('Unreachable code.');
     }

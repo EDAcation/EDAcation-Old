@@ -1,9 +1,11 @@
-import {Storage, StorageDirectory, StorageEntry, StorageError, StorageFile} from './Storage';
+import {getSerialId, serialize, deserialize, serializable} from '../serializable';
+
+import {SerializedStorage, Storage, StorageDirectory, StorageEntry, StorageError, StorageFile} from './Storage';
 import {StorageType} from './StorageType';
 
-export type StorageEntryFSA = StorageEntry<FileSystemDirectoryHandle, FileSystemFileHandle>;
+export type StorageEntryFSA = StorageEntry<FileSystemDirectoryHandle, FileSystemFileHandle, SerializedStorageFSA>;
 
-export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHandle, FileSystemFileHandle> {
+export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHandle, FileSystemFileHandle, SerializedStorageFSA> {
 
     protected storage: StorageFSA;
     private _entries?: StorageEntryFSA[];
@@ -61,7 +63,7 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
     }
 }
 
-export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileSystemFileHandle> {
+export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileSystemFileHandle, SerializedStorageFSA> {
 
     protected storage: StorageFSA;
 
@@ -89,7 +91,14 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
     }
 }
 
-export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFileHandle> {
+interface SerializedStorageFSA extends SerializedStorage {
+    handle: FileSystemDirectoryHandle;
+}
+
+const SERIAL_ID = 'StorageFSA';
+
+@serializable(SERIAL_ID)
+export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFileHandle, SerializedStorageFSA> {
 
     private static PERMISSION_OPTIONS: FileSystemHandlePermissionDescriptor = {
         mode: 'readwrite'
@@ -109,13 +118,19 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
         return 'Open local directory';
     }
 
-    serialize() {
+    [getSerialId]() {
+        return SERIAL_ID;
+    }
+
+    [serialize](): SerializedStorageFSA {
         return {
+            ...super[serialize](),
             handle: this.root.getHandle()
         };
     }
 
-    deserialize(data: Record<string, unknown>) {
+    [deserialize](data: SerializedStorageFSA) {
+        super[deserialize](data);
         this.root = new StorageDirectoryFSA(this, null, data.handle as FileSystemDirectoryHandle);
     }
 
@@ -124,12 +139,10 @@ export class StorageFSA extends Storage<FileSystemDirectoryHandle, FileSystemFil
     }
 
     async hasPermission(): Promise<boolean> {
-        console.log(this.root.getHandle());
         return await this.root.getHandle().queryPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 
     async requestPermission(): Promise<boolean> {
-        console.log(this.root.getHandle());
         return await this.root.getHandle().requestPermission(StorageFSA.PERMISSION_OPTIONS) === 'granted';
     }
 
