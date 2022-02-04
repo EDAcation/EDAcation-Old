@@ -11,7 +11,7 @@ export enum StorageEntryType {
     FILE = 'FILE'
 }
 
-export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized extends SerializedStorage> {
+export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage> {
 
     protected storage: Storage<DirectoryHandle, FileHandle, Serialized>;
     protected parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized> | null;
@@ -65,7 +65,7 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized exten
 
 // TODO: copy, move
 
-export abstract class StorageDirectory<DirectoryHandle, FileHandle, Serialized extends SerializedStorage>
+export abstract class StorageDirectory<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage>
     extends StorageEntry<DirectoryHandle, FileHandle, Serialized> {
 
     protected handle: DirectoryHandle;
@@ -104,7 +104,7 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle, Serialized e
     }
 }
 
-export abstract class StorageFile<DirectoryHandle, FileHandle, Serialized extends SerializedStorage>
+export abstract class StorageFile<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage>
     extends StorageEntry<DirectoryHandle, FileHandle, Serialized> {
 
     protected parent: StorageDirectory<DirectoryHandle, FileHandle, Serialized>;
@@ -147,7 +147,7 @@ export interface SerializedStorage {
     id: string;
 }
 
-export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends SerializedStorage> implements Serializable<Serialized> {
+export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage> implements Serializable<Serialized> {
 
     private id: string;
 

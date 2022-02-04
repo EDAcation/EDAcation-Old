@@ -1,22 +1,10 @@
 import {Action, Reducer} from '@reduxjs/toolkit';
 import {get, set, del} from 'idb-keyval';
-import {createTransform, persistReducer, persistStore} from 'redux-persist';
+import {persistReducer, persistStore} from 'redux-persist';
 
 import {serializeState, deserializeState} from '../serializable';
 
-const transform = createTransform<unknown, unknown>(
-    (inboundState, key) => {
-        console.log('in', key, inboundState);
-        return serializeState(inboundState);
-    },
-    (outboundState, key) => {
-        console.log('out', key, outboundState);
-        return deserializeState(outboundState);
-    },
-    {
-        blacklist: ['_persist']
-    }
-);
+const DESERIALIZATION_ORDER = ['storages', 'keys'];
 
 export const createPersistReducer = <S, A extends Action>(reducer: Reducer<S, A>) => persistReducer<S, A>({
     key: 'root',
@@ -25,10 +13,29 @@ export const createPersistReducer = <S, A extends Action>(reducer: Reducer<S, A>
         setItem: (key, value) => set(key, value),
         removeItem: (key) => del(key)
     },
-    transforms: [transform],
-    serialize: false,
-    // @ts-expect-error: deserialize does not exist on the PersistConfig type, but should
-    deserialize: false
+    // @ts-expect-error: PersistConfig type has incorrect types for serialize and deserialize
+    serialize: (state: Record<string, unknown>) => {
+        if (state._persist) {
+            return serializeState(state);
+        }
+        return state;
+    },
+    deserialize: (data: Record<string, unknown>) => {
+        if (data._persist) {
+            const keys = Object.keys(data).sort((a, b) => {
+                const indexA = DESERIALIZATION_ORDER.indexOf(a) || Infinity;
+                const indexB = DESERIALIZATION_ORDER.indexOf(b) || Infinity;
+                return indexA > indexB ? -1 : 1;
+            });
+
+            const state: Record<string, unknown> = {};
+            for (const key of keys) {
+                state[key] = deserializeState(data[key], state);
+            }
+            return state;
+        }
+        return data;
+    }
 }, reducer);
 
 export const createPersistor = persistStore;

@@ -1,4 +1,4 @@
-import {BaseStyles, ThemeProvider} from '@primer/react';
+import {BaseStyles, Spinner, ThemeProvider} from '@primer/react';
 import React from 'react';
 import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
@@ -11,7 +11,7 @@ import {StateProvider} from './state/StateContext';
 export const Root = () => {
     return (
         <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
+            <PersistGate loading={<Spinner />} persistor={persistor}>
                 <ThemeProvider colorMode="night" nightScheme="dark_dimmed">
                     <BaseStyles>
                         <StateProvider>

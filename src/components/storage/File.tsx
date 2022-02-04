@@ -3,6 +3,7 @@ import {FileIcon} from '@primer/octicons-react';
 import React from 'react';
 import {v4 as uuidv4} from 'uuid';
 
+import {EditorFile} from '../../state';
 import {StorageFile} from '../../storage';
 import {useAppDispatch} from '../../store';
 import {addFile} from '../../store/files';
@@ -15,33 +16,10 @@ export const File: React.FC<FileProps> = ({file}) => {
     const dispatch = useAppDispatch();
 
     const handleClick = async () => {
-        const id = uuidv4();
+        const editorFile = new EditorFile(file);
+        dispatch(addFile(editorFile));
 
-        dispatch(addFile({
-            id,
-            storage: file.getStorage(),
-            path: file.getPath(),
-            file,
-            isSaved: true
-        }));
-
-        // TODO: open file ID
-        // await updateState({
-        //     editor: {
-        //         ...state.editor,
-        //         files: [
-        //             ...state.editor.files,
-        //             {
-        //                 id,
-        //                 storage: file.getStorage(),
-        //                 path: file.getPath(),
-        //                 file,
-        //                 isSaved: true
-        //             }
-        //         ],
-        //         openFileId: id
-        //     }
-        // });
+        // TODO: open file in a panel with editorFile.getID()
     };
 
     return (

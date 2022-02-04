@@ -1,7 +1,7 @@
 import React, {useContext} from 'react';
 import MonacoEditor, {loader, OnMount} from '@monaco-editor/react';
 
-import {EditorFileOpened} from '../../state';
+import {EditorFile} from '../../state';
 import {StateContext} from '../state/StateContext';
 
 import {BaseEditorProps} from './BaseEditor';
@@ -12,7 +12,7 @@ loader.init();
 export type EditorMonacoProps = BaseEditorProps;
 
 // NOTE: Ugly hack to have file access in commands
-let latestFile: EditorFileOpened;
+let latestFile: EditorFile;
 
 export const EditorMonaco: React.FC<BaseEditorProps> = ({file, value, onChange, onSave}) => {
     const [state] = useContext(StateContext);
@@ -31,7 +31,7 @@ export const EditorMonaco: React.FC<BaseEditorProps> = ({file, value, onChange, 
 
     return (
         <MonacoEditor
-            path={[file.storage.getID()].concat(file.path).join('/')}
+            path={file.getFullPath()}
             theme={state.theme === 'light' ? 'vs-light' : 'vs-dark'}
             value={value}
             onMount={handleMount}

@@ -5,7 +5,7 @@ export const deserialize = Symbol('deserialize');
 export interface Serializable<Serialized> {
     [getSerialId]: () => string;
     [serialize]: () => Serialized;
-    [deserialize]: (data: Serialized) => void;
+    [deserialize]: (data: Serialized, partialState: Record<string, unknown>) => void;
 }
 
 const serializables: Record<string, new () => Serializable<unknown>> = {};
@@ -15,41 +15,9 @@ export const serializable = (identifier: string) => (target: new () => Serializa
     serializables[identifier] = target;
 };
 
-export const isSerializable = (object: object) => {
+export const isSerializable = (object: Record<string | number | symbol, unknown>) => {
     return typeof object[serialize] === 'function';
 };
-
-interface TestSerialized {
-    test: number;
-}
-
-const SERIAL_ID_TEST = 'test';
-
-@serializable(SERIAL_ID_TEST)
-class Test implements Serializable<TestSerialized> {
-
-    test: number;
-
-    constructor(test: number = 0) {
-        this.test = test;
-    }
-
-    [getSerialId]() {
-        return SERIAL_ID_TEST;
-    }
-
-    [serialize](): TestSerialized {
-        return {
-            test: this.test
-        };
-    }
-
-    [deserialize](data: TestSerialized) {
-        this.test = data.test;
-    }
-}
-
-const test = new Test(10);
 
 // NOTE: It is basically impossible to keep proper typing inside these function, but the input and output state types should be correct.
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -75,25 +43,25 @@ export const serializeState = <State>(state: State): any => {
     }
 };
 
-export const deserializeState = <State>(data: any): State => {
+export const deserializeState = <State>(data: any, partialState: State): State => {
     if (Array.isArray(data)) {
-        return data.map((value) => deserializeState(value)) as any;
+        return data.map((value) => deserializeState(value, partialState)) as any;
     } else if (typeof data === 'object' && data !== null) {
         if (typeof data.__serialId__ === 'string') {
             const {__serialId__: id, ...serialized} = data;
 
             const SerializableClass = serializables[id];
             if (!SerializableClass) {
-                console.warn(`Unknown seriazable ID "${id}"`);
+                console.warn(`Unknown seriazable ID "${id}".`);
             }
 
             const state = new SerializableClass();
-            state[deserialize](serialized);
+            state[deserialize](serialized, partialState as any);
             return state as any;
         } else {
             const state: any = {};
             for (const [key, value] of Object.entries(data)) {
-                state[key] = deserializeState(value);
+                state[key] = deserializeState(value, partialState);
             }
             return state;
         }
@@ -103,5 +71,3 @@ export const deserializeState = <State>(data: any): State => {
 };
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
-
-console.log(serializeState({q: test}), deserializeState(serializeState({q: test})));

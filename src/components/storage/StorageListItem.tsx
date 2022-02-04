@@ -1,7 +1,10 @@
-import {Box, Button, ButtonClose, Heading, Spinner} from '@primer/react';
+import {Box, Button, ButtonClose, Spinner} from '@primer/react';
 import React, {useEffect, useState} from 'react';
+import {useDispatch} from 'react-redux';
 
 import {Storage, StorageDirectory} from '../../storage';
+import {useAppSelector} from '../../store';
+import {accessFiles} from '../../store/files';
 
 import {Directory} from './Directory';
 
@@ -11,6 +14,9 @@ export interface StorageProps {
 }
 
 export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => {
+    const dispatch = useDispatch();
+    const files = useAppSelector((state) => state.files);
+
     const [hasPermission, setHasPermission] = useState(false);
     const [root, setRoot] = useState<StorageDirectory<unknown, unknown> | undefined>(undefined);
 
@@ -26,11 +32,8 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
         setHasPermission(result);
 
         if (result) {
-            // Force state update for storages
-            // TODO: deal with this if necessary
-            // await updateState({
-            //     storages: [...state.storages]
-            // });
+            // Access files from this storage provider
+            dispatch(accessFiles(files.filter((file) => file.getStorage().getID() === storage.getID())));
         }
     };
 
@@ -43,7 +46,7 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
     return (
         <>
             <Box px={1}>
-                <Box as={Heading} fontSize={2} p={1} display="flex" justifyContent="space-between" alignItems="center">
+                <Box fontSize={2} fontWeight="bold" p={1} display="flex" justifyContent="space-between" alignItems="center">
                     <span>
                         {storage.getName()}
                         {root && ` (${root.getName()})`}

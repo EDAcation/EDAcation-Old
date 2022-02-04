@@ -1,8 +1,8 @@
-import {EditorFileOpened} from '../../state';
+import {EditorFile} from '../../state';
 
 export interface BaseEditorProps {
-    file: EditorFileOpened;
+    file: EditorFile;
     value: string;
-    onChange: (file: EditorFileOpened, newValue: string) => void;
-    onSave?: (file: EditorFileOpened) => void;
+    onChange: (file: EditorFile, newValue: string) => void;
+    onSave?: (file: EditorFile) => void;
 }

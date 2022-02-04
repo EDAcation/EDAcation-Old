@@ -15,7 +15,7 @@ export const store = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         immutableCheck: {
-            ignoredPaths: ['storages']
+            ignoredPaths: ['files', 'storages']
         },
         serializableCheck: {
             // Ignore redux-persist actions

@@ -1,9 +1,9 @@
 import {ButtonClose, TabNav, Text} from '@primer/react';
-import React, {MouseEvent, useContext} from 'react';
+import React, {MouseEvent} from 'react';
 
 import {EditorFile} from '../../state';
 import {useAppDispatch, useAppSelector} from '../../store';
-import {removeFile, updateFile} from '../../store/files';
+import {removeFile} from '../../store/files';
 
 export const Tabs: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -59,8 +59,8 @@ export const Tabs: React.FC = () => {
                     style={{cursor: 'pointer', userSelect: 'none'}}
                 >
                     <Text>
-                        {file.path[file.path.length - 1]}
-                        {!file.isSaved && ' ⏺'}
+                        {file.getName()}
+                        <small>{!file.isSaved() && ' ●'}</small>
                     </Text>
 
                     <ButtonClose sx={{pl: 1}} onClick={handleClose.bind(this, file, index)} />
