@@ -1,21 +1,24 @@
 import {Button, ButtonProps, StyledOcticon} from '@primer/react';
 import {MoonIcon, SunIcon} from '@primer/octicons-react';
-import React, {useContext} from 'react';
+import React from 'react';
 
-import {StateContext} from '../state/StateContext';
+import {useAppDispatch, useAppSelector} from '../../store';
+import {setSetting} from '../../store/settings';
 
 export const ThemeButton: React.FC<ButtonProps> = (props) => {
-    const [state, updateState] = useContext(StateContext);
+    const theme = useAppSelector((state) => state.settings.theme);
+    const dispatch = useAppDispatch();
 
     const handleClick = async () => {
-        await updateState({
-            theme: state.theme == 'light' ? 'dark' : 'light'
-        });
+        dispatch(setSetting({
+            key: 'theme',
+            value: theme == 'light' ? 'dark' : 'light'
+        }));
     };
 
     return (
         <Button p={2} onClick={handleClick} {...props}>
-            <StyledOcticon icon={state.theme === 'light' ? MoonIcon : SunIcon} />
+            <StyledOcticon icon={theme === 'light' ? MoonIcon : SunIcon} />
         </Button>
     );
 };

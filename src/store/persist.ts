@@ -4,7 +4,7 @@ import {persistReducer, persistStore} from 'redux-persist';
 
 import {serializeState, deserializeState} from '../serializable';
 
-const DESERIALIZATION_ORDER = ['storages', 'keys'];
+const DESERIALIZATION_ORDER = ['settings', 'storages', 'keys'];
 
 export const createPersistReducer = <S, A extends Action>(reducer: Reducer<S, A>) => persistReducer<S, A>({
     key: 'root',

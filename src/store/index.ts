@@ -5,8 +5,10 @@ import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER} from 'redux-persist';
 import {storagesSlice} from './storages';
 import {filesSlice} from './files';
 import {createPersistor, createPersistReducer} from './persist';
+import {settingsSlice} from './settings';
 
 const rootReducer = createPersistReducer(combineReducers({
+    settings: settingsSlice.reducer,
     storages: storagesSlice.reducer,
     files: filesSlice.reducer
 }));

@@ -6,7 +6,6 @@ import {PersistGate} from 'redux-persist/integration/react';
 import {store, persistor} from '../store';
 
 import {App} from './app/App';
-import {StateProvider} from './state/StateContext';
 
 export const Root = () => {
     return (
@@ -14,9 +13,7 @@ export const Root = () => {
             <PersistGate loading={<Spinner />} persistor={persistor}>
                 <ThemeProvider colorMode="night" nightScheme="dark_dimmed">
                     <BaseStyles>
-                        <StateProvider>
-                            <App />
-                        </StateProvider>
+                        <App />
                     </BaseStyles>
                 </ThemeProvider>
             </PersistGate>

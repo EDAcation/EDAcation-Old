@@ -1,20 +1,20 @@
 import {useTheme} from '@primer/react';
-import React, {useContext, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {Helmet} from 'react-helmet';
 
-import {StateContext} from '../state/StateContext';
+import {useAppSelector} from '../../store';
 
 import {Header} from './Header';
 import {Main} from './Main';
 import {Footer} from './Footer';
 
 export const App = () => {
-    const [state] = useContext(StateContext);
+    const theme = useAppSelector((state) => state.settings.theme);
     const {setColorMode} = useTheme();
 
     useEffect(() => {
-        setColorMode(state.theme === 'light' ? 'day' : 'night');
-    }, [state.theme, setColorMode]);
+        setColorMode(theme === 'light' ? 'day' : 'night');
+    }, [theme, setColorMode]);
 
     return (
         <>
