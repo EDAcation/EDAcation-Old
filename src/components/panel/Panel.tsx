@@ -2,11 +2,10 @@ import React from 'react';
 
 import {Panel as StorePanel, PanelType} from '../../store/panels';
 
-import {BasePanel} from './BasePanel';
 import {PanelEditor} from './PanelEditor';
 import {PanelSplit} from './PanelSplit';
 
-const panelComponents: {[t in PanelType]: BasePanel} = {
+const panelComponents = {
     [PanelType.SPLIT]: PanelSplit,
     [PanelType.EDITOR]: PanelEditor
 };
@@ -24,6 +23,7 @@ export const Panel: React.FC<PanelProps> = ({panel}) => {
 
     return (
         <>
+            {/* @ts-expect-error: panel has conflicting types */}
             <PanelComponent panel={panel} />
         </>
     );

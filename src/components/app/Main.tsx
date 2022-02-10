@@ -20,7 +20,6 @@ export const Main = () => {
                         </Box>
                     </Allotment.Pane>
                     <Allotment.Pane>
-
                         <Panel panel={panel} />
                     </Allotment.Pane>
                 </Allotment>

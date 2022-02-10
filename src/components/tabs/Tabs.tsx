@@ -2,29 +2,32 @@ import {ButtonClose, TabNav, Text} from '@primer/react';
 import React, {MouseEvent} from 'react';
 
 import {EditorFile} from '../../state';
-import {useAppDispatch, useAppSelector} from '../../store';
+import {useAppDispatch} from '../../store';
 import {removeFile} from '../../store/files';
+import {closeFile, viewFile} from '../../store/panels';
 
-export const Tabs: React.FC = () => {
+export interface TabsProps {
+    panelId: string;
+    files: EditorFile[];
+    currentFileId: string;
+}
+
+export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
     const dispatch = useAppDispatch();
-    const files = useAppSelector((state) => state.files);
 
     // TODO: https://github.com/atlassian/react-beautiful-dnd
 
     const handleClick = async (file: EditorFile) => {
-        // TODO: handle open file ID
-        // await updateState({
-        //     editor: {
-        //         ...state.editor,
-        //         openFileId: file.id
-        //     }
-        // });
+        dispatch(viewFile({
+            fileId: file.getID(),
+            panelId
+        }));
     };
 
     const handleClose = async (file: EditorFile, index: number, event: MouseEvent) => {
         event.stopPropagation();
 
-        if (!file.isSaved) {
+        if (!file.isSaved()) {
             // TODO: replace with Primer React popup
 
             if (!window.confirm('You have unsaved changes. Are you sure you want to close this file?')) {
@@ -32,19 +35,12 @@ export const Tabs: React.FC = () => {
             }
         }
 
-        dispatch(removeFile(file));
-
-        // TODO: handle open file ID
-
-        // const files = state.editor.files.filter((f) => f.id !== file.id);
-
-        // await updateState({
-        //     editor: {
-        //         ...state.editor,
-        //         files,
-        //         openFileId: state.editor.openFileId === file.id ? file.id : files[Math.min(Math.max(0, index - 1), files.length - 1)].id
-        //     }
-        // });
+        // TODO: remove file if this panel was the last that had it open
+        // dispatch(removeFile(file));
+        dispatch(closeFile({
+            fileId: file.getID(),
+            panelId
+        }));
     };
 
     return (
@@ -52,9 +48,7 @@ export const Tabs: React.FC = () => {
             {files.map((file, index) => (
                 <TabNav.Link
                     key={index}
-                    // TODO: handle open file ID
-                    // selected={file.id === state.editor.openFileId}
-                    selected={index === 0}
+                    selected={file.getID() === currentFileId}
                     onClick={handleClick.bind(this, file)}
                     style={{cursor: 'pointer', userSelect: 'none'}}
                 >

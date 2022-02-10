@@ -6,21 +6,25 @@ export enum PanelType {
     EDITOR = 'EDITOR'
 }
 
-export interface Panel {
+export interface BasePanel {
     id: string;
-    type: PanelType;
 }
 
-export interface PanelSplit extends Panel {
+export interface PanelSplit extends BasePanel {
+    id: string;
     type: PanelType.SPLIT;
     direction: 'horizontal' | 'vertical';
     children: Panel[];
 }
 
-export interface PanelEditor extends Panel {
+export interface PanelEditor extends BasePanel {
+    id: string;
     type: PanelType.EDITOR;
     fileIds: string[];
+    currentFileId: string;
 }
+
+export type Panel = PanelSplit | PanelEditor;
 
 export type PanelsState = Panel;
 
@@ -67,6 +71,25 @@ const findPanelByType = (panel: Panel, type: PanelType): Panel | null => {
     return null;
 };
 
+const findPanelByFileId = (panel: Panel, fileId: string, panelId?: string): PanelEditor | null => {
+    if (panel.type === PanelType.EDITOR && panel.fileIds.includes(fileId)) {
+        if (!panelId || panel.id === panelId) {
+            return panel;
+        }
+    }
+
+    if (panel.type === PanelType.SPLIT) {
+        for (const child of (panel as PanelSplit).children) {
+            const result = findPanelByFileId(child, fileId);
+            if (result) {
+                return result;
+            }
+        }
+    }
+
+    return null;
+};
+
 export const panelsSlice = createSlice({
     name: 'panels',
     initialState,
@@ -101,17 +124,47 @@ export const panelsSlice = createSlice({
             if (panel) {
                 const panelEditor = panel as PanelEditor;
                 panelEditor.fileIds.push(action.payload.fileId);
+
+                if (!panelEditor.fileIds.includes(panelEditor.currentFileId)) {
+                    panelEditor.currentFileId = action.payload.fileId;
+                }
             } else {
                 const panelEditor: PanelEditor = {
                     id: uuidv4(),
                     type: PanelType.EDITOR,
-                    fileIds: [action.payload.fileId]
+                    fileIds: [action.payload.fileId],
+                    currentFileId: action.payload.fileId
                 };
                 const panelSplit = findPanelByType(state, PanelType.SPLIT) as PanelSplit;
                 panelSplit.children.push(panelEditor);
+            }
+        },
+
+        viewFile(state, action: PayloadAction<{fileId: string; panelId?: string}>) {
+            const panel = findPanelByFileId(state, action.payload.fileId, action.payload.panelId);
+            if (panel) {
+                panel.currentFileId = action.payload.fileId;
+            } else {
+                console.warn(`Unable to view file "${action.payload.fileId}"`);
+            }
+        },
+
+        closeFile(state, action: PayloadAction<{fileId: string; panelId?: string}>) {
+            const panel = findPanelByFileId(state, action.payload.fileId, action.payload.panelId);
+            if (panel) {
+                const index = panel.fileIds.indexOf(action.payload.fileId);
+                panel.fileIds.splice(index, 1);
+
+                if (panel.fileIds.length === 0) {
+                    // TODO: close panel
+                } else if (panel.currentFileId === action.payload.fileId) {
+                    panel.currentFileId = panel.fileIds[Math.min(Math.max(0, index - 1), panel.fileIds.length - 1)];
+                }
+            } else {
+                console.warn(`Unable to view file "${action.payload.fileId}"`);
             }
         }
     }
 });
 
-export const {addPanel, removePanel, openFile} = panelsSlice.actions;
+export const {addPanel, removePanel, openFile, viewFile, closeFile} = panelsSlice.actions;

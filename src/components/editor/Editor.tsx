@@ -3,16 +3,22 @@ import React, {useEffect} from 'react';
 
 import {EditorFile} from '../../state';
 import {StorageError} from '../../storage';
-import {useAppDispatch, useAppSelector} from '../../store';
+import {useAppDispatch} from '../../store';
 import {loadFile, saveFile, changeFile, removeFile} from '../../store/files';
 
 import {EditorMonaco} from './EditorMonoca';
 
-export const Editor: React.FC = () => {
+export interface EditorProps {
+    files: EditorFile[];
+    currentFileId: string;
+}
+
+export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
     const dispatch = useAppDispatch();
-    const files = useAppSelector((state) => state.files);
 
     console.log(files);
+
+    // TODO: this effect should probably be more global instead of having each editor handle its own file opening
 
     // Open files when needed
     useEffect(() => {
@@ -68,8 +74,7 @@ export const Editor: React.FC = () => {
         }));
     };
 
-    // const file = state.editor.files.length > 0 ? state.editor.files.find((file) => file.id === state.editor.openFileId) : null;
-    const file = files.length > 0 ? files[0] : null;
+    const file = files.length > 0 ? files.find((file) => file.getID() === currentFileId) : null;
 
     if (!file) {
         return <></>;
