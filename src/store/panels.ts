@@ -7,18 +7,17 @@ export enum PanelType {
 }
 
 export interface BasePanel {
+    parentId: string;
     id: string;
 }
 
 export interface PanelSplit extends BasePanel {
-    id: string;
     type: PanelType.SPLIT;
     direction: 'horizontal' | 'vertical';
     children: Panel[];
 }
 
 export interface PanelEditor extends BasePanel {
-    id: string;
     type: PanelType.EDITOR;
     fileIds: string[];
     currentFileId: string;
@@ -29,6 +28,7 @@ export type Panel = PanelSplit | PanelEditor;
 export type PanelsState = Panel;
 
 const panel: PanelSplit = {
+    parentId: '',
     id: uuidv4(),
     type: PanelType.SPLIT,
     direction: 'horizontal',
@@ -90,23 +90,43 @@ const findPanelByFileId = (panel: Panel, fileId: string, panelId?: string): Pane
     return null;
 };
 
+const closePanel = (root: Panel, panel: Panel) => {
+    if (root === panel || panel.parentId === '') {
+        throw new Error(`Can't close root panel`);
+    }
+
+    const parentPanel = findPanelById(root, panel.parentId);
+    if (!parentPanel) {
+        throw new Error(`Unknown parent panel ID "${panel.parentId}"`);
+    }
+
+    if (parentPanel.type === PanelType.SPLIT) {
+        const panelSplit = parentPanel as PanelSplit;
+        panelSplit.children.splice(panelSplit.children.findIndex((panel) => panel.id === panel.id), 1);
+    } else {
+        throw new Error(`Panel "${parentPanel.id}" can't have children.`);
+    }
+};
+
 export const panelsSlice = createSlice({
     name: 'panels',
     initialState,
     reducers: {
-        addPanel(state, action: PayloadAction<{parentId: string; panel: Panel}>) {
+        addPanel(state, action: PayloadAction<Panel>) {
             const parentPanel = findPanelById(state, action.payload.parentId);
             if (!parentPanel) {
-                throw new Error(`Unknown panel ID "${action.payload.parentId}"`);
+                throw new Error(`Unknown parent panel ID "${action.payload.parentId}"`);
             }
 
             if (parentPanel.type === PanelType.SPLIT) {
                 const panelSplit = parentPanel as PanelSplit;
                 panelSplit.children.push(panel);
+            } else {
+                throw new Error(`Panel "${parentPanel.id}" can't have children.`);
             }
         },
         removePanel(state, action: PayloadAction<Panel>) {
-            // TODO
+            closePanel(state, action.payload);
         },
 
         openFile(state, action: PayloadAction<{fileId: string; panelId?: string}>) {
@@ -129,13 +149,15 @@ export const panelsSlice = createSlice({
                     panelEditor.currentFileId = action.payload.fileId;
                 }
             } else {
+                const panelSplit = findPanelByType(state, PanelType.SPLIT) as PanelSplit;
+
                 const panelEditor: PanelEditor = {
+                    parentId: panelSplit.id,
                     id: uuidv4(),
                     type: PanelType.EDITOR,
                     fileIds: [action.payload.fileId],
                     currentFileId: action.payload.fileId
                 };
-                const panelSplit = findPanelByType(state, PanelType.SPLIT) as PanelSplit;
                 panelSplit.children.push(panelEditor);
             }
         },
@@ -156,7 +178,7 @@ export const panelsSlice = createSlice({
                 panel.fileIds.splice(index, 1);
 
                 if (panel.fileIds.length === 0) {
-                    // TODO: close panel
+                    closePanel(state, panel);
                 } else if (panel.currentFileId === action.payload.fileId) {
                     panel.currentFileId = panel.fileIds[Math.min(Math.max(0, index - 1), panel.fileIds.length - 1)];
                 }
