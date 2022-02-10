@@ -1,5 +1,7 @@
+import {Panel} from '../../store/panels';
+
 export interface BasePanelProps {
-    _todo?: boolean;
+    panel: Panel;
 }
 
 export type BasePanel = React.FC<BasePanelProps>;

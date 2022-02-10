@@ -1,30 +1,30 @@
 import React from 'react';
 
+import {Panel as StorePanel, PanelType} from '../../store/panels';
+
 import {BasePanel} from './BasePanel';
 import {PanelEditor} from './PanelEditor';
-
-export enum PanelType {
-    EDITOR = 'EDITOR'
-}
+import {PanelSplit} from './PanelSplit';
 
 const panelComponents: {[t in PanelType]: BasePanel} = {
+    [PanelType.SPLIT]: PanelSplit,
     [PanelType.EDITOR]: PanelEditor
 };
 
 export interface PanelProps {
-    type: PanelType;
+    panel: StorePanel;
 }
 
-export const Panel: React.FC<PanelProps> = ({type}) => {
-    const PanelComponent = panelComponents[type];
+export const Panel: React.FC<PanelProps> = ({panel}) => {
+    const PanelComponent = panelComponents[panel.type];
 
     if (!PanelComponent) {
-        throw Error(`Unknown panel type "${type}"`);
+        throw Error(`Unknown panel type "${panel.type}"`);
     }
 
     return (
         <>
-            <PanelComponent />
+            <PanelComponent panel={panel} />
         </>
     );
 };

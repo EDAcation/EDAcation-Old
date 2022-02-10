@@ -3,10 +3,13 @@ import {Box} from '@primer/react';
 import {Allotment} from 'allotment';
 import React from 'react';
 
-import {Panel, PanelType} from '../panel/Panel';
+import {useAppSelector} from '../../store';
+import {Panel} from '../panel/Panel';
 import {StorageList} from '../storage/StorageList';
 
 export const Main = () => {
+    const panel = useAppSelector((state) => state.panels);
+
     return (
         <main style={{height: 'calc(100vh - 3rem)'}}>
             <Box height="100%" backgroundColor="canvas.default">
@@ -18,7 +21,7 @@ export const Main = () => {
                     </Allotment.Pane>
                     <Allotment.Pane>
 
-                        <Panel type={PanelType.EDITOR} />
+                        <Panel panel={panel} />
                     </Allotment.Pane>
                 </Allotment>
             </Box>
