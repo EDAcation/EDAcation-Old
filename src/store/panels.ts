@@ -129,7 +129,7 @@ export const panelsSlice = createSlice({
             closePanel(state, action.payload);
         },
 
-        openFile(state, action: PayloadAction<{fileId: string; panelId?: string}>) {
+        openFile(state, action: PayloadAction<{fileId: string; panelId?: string; split?: boolean}>) {
             let panel: Panel | null = null;
             if (action.payload.panelId) {
                 panel = findPanelById(state, action.payload.panelId);
@@ -137,7 +137,7 @@ export const panelsSlice = createSlice({
                     panel = null;
                 }
             }
-            if (!panel) {
+            if (!panel && !action.payload.split) {
                 panel = findPanelByType(state, PanelType.EDITOR);
             }
 
