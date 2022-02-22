@@ -14,7 +14,7 @@ export type EditorMonacoProps = BaseEditorProps;
 // NOTE: Ugly hack to have file access in commands
 let latestFile: EditorFile;
 
-export const EditorMonaco: React.FC<BaseEditorProps> = ({file, value, onChange, onSave}) => {
+export const EditorMonaco: React.FC<EditorMonacoProps> = ({file, value, onChange, onSave}) => {
     const theme = useAppSelector((state) => state.settings.theme);
 
     // NOTE: Ugly hack to have file access in commands

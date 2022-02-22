@@ -1,4 +1,4 @@
-import {Box, Spinner, Text} from '@primer/react';
+import {Box, Button, Spinner, Text} from '@primer/react';
 import React, {useEffect} from 'react';
 
 import {EditorFile} from '../../state';
@@ -6,7 +6,14 @@ import {StorageError} from '../../storage';
 import {useAppDispatch} from '../../store';
 import {loadFile, saveFile, changeFile, removeFile} from '../../store/files';
 
+import {EditorButtonYosys} from './buttons/EditorButtonYosys';
+import {BaseEditorProps} from './BaseEditor';
+import {EditorGraphviz} from './EditorGraphviz';
 import {EditorMonaco} from './EditorMonoca';
+
+const EDITORS_BY_EXTENSION: Record<string, React.FC<BaseEditorProps>> = {
+    '.dot': EditorGraphviz
+};
 
 export interface EditorProps {
     files: EditorFile[];
@@ -96,7 +103,15 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
         );
     }
 
+    const EditorType = EDITORS_BY_EXTENSION[file.getExtension()] || EditorMonaco;
+
     return (
-        <EditorMonaco file={file} value={file.getContent()} onChange={handleChange} onSave={handleSave} />
+        <>
+            <EditorType file={file} value={file.getContent()} onChange={handleChange} onSave={handleSave} />
+
+            <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
+                {file.getExtension() === '.v' && <EditorButtonYosys file={file} />}
+            </Box>
+        </>
     );
 };

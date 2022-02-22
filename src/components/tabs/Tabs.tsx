@@ -53,7 +53,7 @@ export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
                     style={{cursor: 'pointer', userSelect: 'none'}}
                 >
                     <Text>
-                        {file.getName()}
+                        {file.getFullName()}
                         <small>{!file.isSaved() && ' ●'}</small>
                     </Text>
 

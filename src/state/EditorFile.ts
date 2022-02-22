@@ -43,8 +43,22 @@ export class EditorFile implements Serializable<SerializedEditorFile> {
         return this.storage;
     }
 
-    getName() {
+    getStorageFile() {
+        return this.file;
+    }
+
+    getFullName() {
         return this.path[this.path.length - 1];
+    }
+
+    getName() {
+        const name = this.getFullName();
+        return name.includes('.') ? name.substring(0, name.lastIndexOf('.')) : name;
+    }
+
+    getExtension() {
+        const name = this.getFullName();
+        return name.includes('.') ? name.substring(name.lastIndexOf('.')).toLowerCase() : '';
     }
 
     getPath() {
