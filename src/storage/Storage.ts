@@ -48,9 +48,14 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized exten
 
     abstract getName(): string;
 
+    getNameWithoutExtension() {
+        const name = this.getName();
+        return name.includes('.') ? name.substring(0, name.indexOf('.')) : name;
+    }
+
     getExtension() {
         const name = this.getName();
-        return name.substring(name.indexOf('.') + 1, name.length);
+        return name.includes('.') ? name.substring(name.indexOf('.') + 1, name.length) : '';
     }
 
     getPath(): string[] {
@@ -58,6 +63,10 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized exten
             return [];
         }
         return this.parent.getParent() ? [...this.parent.getPath(), this.getName()] : [this.getName()];
+    }
+
+    getFullPath(): string {
+        return [this.getStorage().getID()].concat(this.getPath()).join('/');
     }
 
     abstract delete(): Promise<void>;

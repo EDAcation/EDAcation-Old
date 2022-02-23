@@ -1,8 +1,9 @@
 import {Button} from '@primer/react';
 import React from 'react';
+import {uuidv4} from 'uuid';
 
 import {EditorFile} from '../../../state';
-import {StorageFile} from '../../../storage';
+import {StorageDirectory, StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
 import {addFile} from '../../../store/files';
 import {openFile} from '../../../store/panels';
@@ -17,13 +18,14 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
         const result = await synthesize(file);
         console.log(file, result);
 
-        const directory = file.getStorageFile()?.getParent();
-        if (!directory) {
-            throw new Error('Missing storage file or parent directory.');
+        const directory = file.file.getParent();
+
+        const resultDirectory = await directory.createDirectory(file.file.getNameWithoutExtension());
+        const resultEntry = await resultDirectory.getEntry('rtl.dot', true);
+        if (resultEntry instanceof StorageDirectory) {
+            throw new Error(`Output file "${resultEntry.getFullPath()}" is already a directory.`);
         }
 
-        const resultDirectory = await directory.createDirectory(file.getName());
-        const resultEntry = await resultDirectory.getEntry('rtl.dot', true);
         // TODO: check if file is not a directory
         let resultFile = resultEntry as StorageFile<unknown, unknown>;
         if (!resultEntry) {
@@ -32,10 +34,13 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
 
         await resultFile.write(result);
 
-        const editorFile = new EditorFile(resultFile);
-        dispatch(addFile(editorFile));
+        const id = uuidv4();
+        dispatch(addFile({
+            id,
+            file: resultFile
+        }));
         dispatch(openFile({
-            fileId: editorFile.getID(),
+            fileId: id,
             split: true
         }));
     };

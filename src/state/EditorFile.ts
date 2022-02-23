@@ -109,7 +109,6 @@ export class EditorFile implements Serializable<SerializedEditorFile> {
     }
 
     async load() {
-        console.log(this);
         if (!this.isAvailable()) {
             throw new Error('Editor file is not available.');
         } else if (this.isLoaded()) {

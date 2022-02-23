@@ -1,5 +1,5 @@
-import {EditorFile} from '../../../state';
+import {EditorFileLoaded} from '../../../store/files';
 
 export interface BaseEditorButtonProps {
-    file: EditorFile;
+    file: EditorFileLoaded;
 }

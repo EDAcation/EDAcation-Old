@@ -1,8 +1,8 @@
-import {EditorFile} from '../../state';
+import {EditorFileLoaded} from '../../store/files';
 
 export interface BaseEditorProps {
-    file: EditorFile;
+    file: EditorFileLoaded;
     value: string;
-    onChange: (file: EditorFile, newValue: string) => void;
-    onSave?: (file: EditorFile) => void;
+    onChange: (file: EditorFileLoaded, newValue: string) => void;
+    onSave?: (file: EditorFileLoaded) => void;
 }

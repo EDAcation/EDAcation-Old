@@ -3,7 +3,7 @@ import path from 'path';
 
 import {Yosys} from 'yosys';
 
-import {EditorFile} from '../state';
+import {EditorFileLoaded} from '../store/files';
 
 // (async () => {
 //     const yosys = await Yosys.initialize({
@@ -55,39 +55,27 @@ export const initialize = async () => {
     });
 };
 
-export const synthesize = async (file: EditorFile) => {
+export const synthesize = async (file: EditorFileLoaded) => {
     if (!yosys) {
         yosys = await initialize();
     }
 
-    yosys.getFS().writeFile(`design${file.getExtension()}`, file.getContent());
+    const extension = file.file.getExtension();
+
+    yosys.getFS().writeFile(`design${extension}`, file.content);
 
     yosys.getFS().writeFile(`design.ys`, `
         design -reset;
-        read_verilog design${file.getExtension()};
+        read_verilog design${extension};
         proc;
         opt;
-        show -nobg -format svg;
+        show;
     `);
 
     // @ts-expect-error: ccall does not exist on type
     yosys.getModule().ccall('run', '', ['string'], ['script design.ys']);
 
-    console.log('test');
-
-    let content: string;
-
-    try {
-        // @ts-ignore: options
-        console.log(yosys.getFS().readdir('.', {}));
-        content = yosys.getFS().readFile('show.dot', {
-            encoding: 'utf8'
-        });
-        console.log(content);
-
-        return content;
-    } catch (err) {
-        console.error(err);
-        throw err;
-    }
+    return yosys.getFS().readFile('show.dot', {
+        encoding: 'utf8'
+    });
 };

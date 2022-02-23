@@ -1,10 +1,9 @@
-import {Box, Button, Spinner, Text} from '@primer/react';
+import {Box, Spinner, Text} from '@primer/react';
 import React, {useEffect} from 'react';
 
-import {EditorFile} from '../../state';
 import {StorageError} from '../../storage';
 import {useAppDispatch} from '../../store';
-import {loadFile, saveFile, changeFile, removeFile} from '../../store/files';
+import {loadFile, saveFile, changeFile, removeFile, EditorFile, EditorFileLoaded} from '../../store/files';
 
 import {EditorButtonYosys} from './buttons/EditorButtonYosys';
 import {BaseEditorProps} from './BaseEditor';
@@ -23,71 +22,26 @@ export interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
     const dispatch = useAppDispatch();
 
-    console.log(files);
-
-    // TODO: this effect should probably be more global instead of having each editor handle its own file opening
-
-    // Open files when needed
-    useEffect(() => {
-        (async () => {
-            // Check if any files need to be loaded
-            if (files.some((file) => !file.isLoaded())) {
-                // Loop over open files
-                for (const file of files) {
-                    if (!file.isAvailable()) {
-                        // Check if the storage has permission, otherwise wait
-                        if (!await file.isAccessible()) {
-                            continue;
-                        }
-
-                        try {
-                            // Find file in storage
-                            // file.file = await file.storage.getEntry(file.path);
-                            await file.access();
-                        } catch (err) {
-                            if (err instanceof StorageError) {
-                                // This file no longer exists, so don't add the file back to the list
-                                console.error(err);
-
-                                dispatch(removeFile(file));
-
-                                continue;
-                            }
-                            throw err;
-                        }
-                    }
-
-                    if (!file.isLoaded()) {
-                        // Read file from storage
-                        // await file.load();
-
-                        dispatch(loadFile(file));
-                    }
-                }
-            }
-        })();
-    }, [files, dispatch]);
-
     const handleSave = (file: EditorFile) => {
         // TODO: Will generate an error if the content on disk was changed by antoher program.
         //       This should error should trigger a Primer React popup, which asks for confirmation.
-        dispatch(saveFile(file));
+        dispatch(saveFile({file}));
     };
 
     const handleChange = (file: EditorFile, content: string) => {
         dispatch(changeFile({
-            file,
+            fileId: file.id,
             content
         }));
     };
 
-    const file = files.length > 0 ? files.find((file) => file.getID() === currentFileId) : null;
+    const file = files.length > 0 ? files.find((file) => file.id === currentFileId) : null;
 
     if (!file) {
         return <></>;
     }
 
-    if (!file.isAvailable()) {
+    if (!file.isAccessible) {
         return (
             <Box p={2}>
                 <Text>Grant permission to this file's storage provider to view the contents.</Text>
@@ -95,7 +49,7 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
         );
     }
 
-    if (!file.isLoaded()) {
+    if (!file.isLoaded) {
         return (
             <Box p={2}>
                 <Spinner />
@@ -103,14 +57,17 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
         );
     }
 
-    const EditorType = EDITORS_BY_EXTENSION[file.getExtension()] || EditorMonaco;
+    const loadedFile = file as EditorFileLoaded;
+    const extension = loadedFile.file.getExtension();
+
+    const EditorType = EDITORS_BY_EXTENSION[extension] || EditorMonaco;
 
     return (
         <>
-            <EditorType file={file} value={file.getContent()} onChange={handleChange} onSave={handleSave} />
+            <EditorType file={loadedFile} value={loadedFile.content} onChange={handleChange} onSave={handleSave} />
 
             <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
-                {file.getExtension() === '.v' && <EditorButtonYosys file={file} />}
+                {extension === '.v' && <EditorButtonYosys file={loadedFile} />}
             </Box>
         </>
     );

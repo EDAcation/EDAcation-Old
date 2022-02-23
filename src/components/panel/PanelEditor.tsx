@@ -9,11 +9,13 @@ import {BasePanelProps} from './BasePanel';
 
 export const PanelEditor: React.FC<BasePanelProps<PanelEditorType>> = ({panel}) => {
     const dispatch = useAppDispatch();
-    const files = useAppSelector((state) => state.files.filter((file) => panel.fileIds.includes(file.getID())));
+    const files = useAppSelector((state) => state.files.filter((file) => panel.fileIds.includes(file.id)));
 
     useEffect(() => {
         if (files.length === 0) {
             dispatch(removePanel(panel));
+            // TODO: remove debug logging
+            console.log('panel is emtpy, removing it');
         }
     }, [dispatch, files, panel]);
 

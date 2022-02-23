@@ -1,9 +1,8 @@
 import {ButtonClose, TabNav, Text} from '@primer/react';
 import React, {MouseEvent} from 'react';
 
-import {EditorFile} from '../../state';
 import {useAppDispatch} from '../../store';
-import {removeFile} from '../../store/files';
+import {EditorFile} from '../../store/files';
 import {closeFile, viewFile} from '../../store/panels';
 
 export interface TabsProps {
@@ -19,7 +18,7 @@ export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
 
     const handleClick = async (file: EditorFile) => {
         dispatch(viewFile({
-            fileId: file.getID(),
+            fileId: file.id,
             panelId
         }));
     };
@@ -27,7 +26,7 @@ export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
     const handleClose = async (file: EditorFile, index: number, event: MouseEvent) => {
         event.stopPropagation();
 
-        if (!file.isSaved()) {
+        if (!file.isSaved) {
             // TODO: replace with Primer React popup
 
             if (!window.confirm('You have unsaved changes. Are you sure you want to close this file?')) {
@@ -38,7 +37,7 @@ export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
         // TODO: remove file if this panel was the last that had it open
         // dispatch(removeFile(file));
         dispatch(closeFile({
-            fileId: file.getID(),
+            fileId: file.id,
             panelId
         }));
     };
@@ -48,13 +47,13 @@ export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
             {files.map((file, index) => (
                 <TabNav.Link
                     key={index}
-                    selected={file.getID() === currentFileId}
+                    selected={file.id === currentFileId}
                     onClick={handleClick.bind(this, file)}
                     style={{cursor: 'pointer', userSelect: 'none'}}
                 >
                     <Text>
-                        {file.getFullName()}
-                        <small>{!file.isSaved() && ' ●'}</small>
+                        {file.path[file.path.length - 1]}
+                        <small>{!file.isSaved && ' ●'}</small>
                     </Text>
 
                     <ButtonClose sx={{pl: 1}} onClick={handleClose.bind(this, file, index)} />
