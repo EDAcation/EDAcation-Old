@@ -1,8 +1,7 @@
 import {Button} from '@primer/react';
 import React from 'react';
-import {uuidv4} from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 
-import {EditorFile} from '../../../state';
 import {StorageDirectory, StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
 import {addFile} from '../../../store/files';

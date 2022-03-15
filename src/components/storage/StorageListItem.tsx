@@ -32,7 +32,6 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
         setHasPermission(result);
 
         if (result) {
-            console.log('disp');
             // Access files from this storage provider
             dispatch(accessFiles(files.filter((file) => file.storage.getID() === storage.getID())));
         }

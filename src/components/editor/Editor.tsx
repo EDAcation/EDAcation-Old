@@ -10,7 +10,7 @@ import {EditorGraphviz} from './EditorGraphviz';
 import {EditorMonaco} from './EditorMonoca';
 
 const EDITORS_BY_EXTENSION: Record<string, React.FC<BaseEditorProps>> = {
-    '.dot': EditorGraphviz
+    dot: EditorGraphviz
 };
 
 export interface EditorProps {
@@ -57,7 +57,6 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
     }
 
     const loadedFile = file as EditorFileLoaded;
-    console.log(loadedFile);
     const extension = loadedFile.file.getExtension();
 
     const EditorType = EDITORS_BY_EXTENSION[extension] || EditorMonaco;
@@ -67,7 +66,7 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
             <EditorType file={loadedFile} value={loadedFile.content} onChange={handleChange} onSave={handleSave} />
 
             <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
-                {extension === '.v' && <EditorButtonYosys file={loadedFile} />}
+                {extension === 'v' && <EditorButtonYosys file={loadedFile} />}
             </Box>
         </>
     );
