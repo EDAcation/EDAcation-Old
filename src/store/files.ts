@@ -32,48 +32,48 @@ export type FilesState = EditorFile[];
 
 const initialState: FilesState = [];
 
+export const doAccessFile = async (file: EditorFile) => {
+    if (await file.storage.hasPermission()) {
+        return await file.storage.getEntry(file.path);
+    }
+
+    return undefined;
+};
+
+export const accessFile = createAsyncThunk(
+    'accessFile',
+    async (file: EditorFile) => {
+        return await doAccessFile(file);
+    }
+);
+
 export const accessFiles = createAsyncThunk(
     'accessFiles',
     async (files: EditorFile[]) => {
+        const results: (StorageFile<unknown, unknown> | undefined)[] = [];
         for (const file of files) {
-            // await file.access();
-
-            // TODO: catch storage error
-
-            if (await file.storage.hasPermission()) {
-                file.file = await file.storage.getEntry(file.path);
-                file.isAccessible = true;
-                file.isLoaded = false;
-            }
+            results.push(await doAccessFile(file));
         }
-        return files;
+        return results;
     }
 );
 
 export const loadFile = createAsyncThunk(
     'loadFile',
     async (file: EditorFile) => {
-        // await file.load();
-
-        if (!file.isAccessible) {
+        if (!file.isAccessible || !file.file) {
             throw new Error('Editor file is not accessible.');
         } else if (file.isLoaded) {
             throw new Error('Editor file is already loaded.');
         }
 
-        file.originalContent = await file.file?.read();
-        file.content = file.originalContent;
-        file.isLoaded = true;
-
-        return file;
+        return await file.file?.read();
     }
 );
 
 export const saveFile = createAsyncThunk(
     'saveFile',
     async ({file, force = false}: {file: EditorFile; force?: boolean}) => {
-        // await file.save();
-
         if (!file.isLoaded) {
             throw new Error('Editor file is not loaded.');
         } else if (!file.content) {
@@ -87,10 +87,7 @@ export const saveFile = createAsyncThunk(
 
         await file.file?.write(file.content);
 
-        file.isSaved = true;
-        file.originalContent = file.content;
-
-        return file;
+        return file.content;
     }
 );
 
@@ -122,14 +119,42 @@ export const filesSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
+        builder.addCase(accessFile.fulfilled, (state, action) => {
+            const file = state.find((file) => file.id === action.meta.arg.id);
+            if (file) {
+                file.file = action.payload;
+                file.isAccessible = true;
+                file.isLoaded = false;
+            }
+        });
+
         builder.addCase(accessFiles.fulfilled, (state, action) => {
-            return state.filter((file) => !action.payload.some((f) => f.id === file.id)).concat(action.payload);
+            action.meta.arg.forEach(({id}, index) => {
+                const file = state.find((file) => file.id === id);
+                if (file) {
+                    file.file = action.payload[index];
+                    file.isAccessible = true;
+                    file.isLoaded = false;
+                }
+            });
         });
+
         builder.addCase(loadFile.fulfilled, (state, action) => {
-            return state.filter((file) => file.id !== action.payload.id).concat([action.payload]);
+            const file = state.find((file) => file.id === action.meta.arg.id);
+            if (file) {
+                file.originalContent = action.payload;
+                file.content = action.payload;
+                file.isLoaded = true;
+                file.isSaved = true;
+            }
         });
+
         builder.addCase(saveFile.fulfilled, (state, action) => {
-            return state.filter((file) => file.id !== action.payload.id).concat([action.payload]);
+            const file = state.find((file) => file.id === action.meta.arg.file.id);
+            if (file) {
+                file.originalContent = action.payload;
+                file.isSaved = true;
+            }
         });
     }
 });

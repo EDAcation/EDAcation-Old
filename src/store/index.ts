@@ -8,12 +8,13 @@ import {panelsSlice} from './panels';
 import {createPersistor, createPersistReducer} from './persist';
 import {settingsSlice} from './settings';
 
-const rootReducer = createPersistReducer(combineReducers({
+// createPersistReducer(
+const rootReducer = combineReducers({
     settings: settingsSlice.reducer,
     storages: storagesSlice.reducer,
     files: filesSlice.reducer,
     panels: panelsSlice.reducer
-}));
+});
 
 export const store = configureStore({
     reducer: rootReducer,

@@ -1,9 +1,8 @@
 import {Box, Spinner, Text} from '@primer/react';
-import React, {useEffect} from 'react';
+import React from 'react';
 
-import {StorageError} from '../../storage';
 import {useAppDispatch} from '../../store';
-import {loadFile, saveFile, changeFile, removeFile, EditorFile, EditorFileLoaded} from '../../store/files';
+import {saveFile, changeFile, EditorFile, EditorFileLoaded} from '../../store/files';
 
 import {EditorButtonYosys} from './buttons/EditorButtonYosys';
 import {BaseEditorProps} from './BaseEditor';
@@ -58,6 +57,7 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
     }
 
     const loadedFile = file as EditorFileLoaded;
+    console.log(loadedFile);
     const extension = loadedFile.file.getExtension();
 
     const EditorType = EDITORS_BY_EXTENSION[extension] || EditorMonaco;

@@ -10,13 +10,13 @@ import {App} from './app/App';
 export const Root = () => {
     return (
         <Provider store={store}>
-            <PersistGate loading={<Spinner />} persistor={persistor}>
-                <ThemeProvider colorMode="night" nightScheme="dark_dimmed">
-                    <BaseStyles>
-                        <App />
-                    </BaseStyles>
-                </ThemeProvider>
-            </PersistGate>
+            {/* <PersistGate loading={<Spinner />} persistor={persistor}> */}
+            <ThemeProvider colorMode="night" nightScheme="dark_dimmed">
+                <BaseStyles>
+                    <App />
+                </BaseStyles>
+            </ThemeProvider>
+            {/* </PersistGate> */}
         </Provider>
     );
 };
