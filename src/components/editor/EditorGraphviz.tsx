@@ -1,12 +1,20 @@
-import React from 'react';
-import {Graphviz} from 'graphviz-react';
+import React, {useEffect} from 'react';
+import {graphviz} from 'd3-graphviz';
 
 import {BaseEditorProps} from './BaseEditor';
 
 export type EditorGraphvizProps = BaseEditorProps;
 
-export const EditorGraphviz: React.FC<EditorGraphvizProps> = ({file}) => {
+export const EditorGraphviz: React.FC<EditorGraphvizProps> = ({panelId, file}) => {
+    useEffect(() => {
+        graphviz(`#graphviz-${panelId}-${file.id}`, {
+            useWorker: true,
+            width: 1000,
+            height: 1000
+        }).renderDot(file.content);
+    }, [panelId, file.id, file.content]);
+
     return (
-        <Graphviz dot={file.content} options={{width: '100%', height: '100%', useWorker: false}} />
+        <div id={`graphviz-${panelId}-${file.id}`} />
     );
 };

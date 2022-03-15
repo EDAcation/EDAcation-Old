@@ -62,11 +62,12 @@ export const synthesize = async (file: EditorFileLoaded) => {
 
     const extension = file.file.getExtension();
 
-    yosys.getFS().writeFile(`design${extension}`, file.content);
+    yosys.getFS().writeFile(`design.${extension}`, file.content);
 
     yosys.getFS().writeFile(`design.ys`, `
         design -reset;
-        read_verilog design${extension};
+        design -reset-vlog;
+        read_verilog design.${extension};
         proc;
         opt;
         show;

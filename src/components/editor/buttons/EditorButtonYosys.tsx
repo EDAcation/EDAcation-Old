@@ -1,10 +1,8 @@
 import {Button} from '@primer/react';
 import React from 'react';
-import {v4 as uuidv4} from 'uuid';
 
 import {StorageDirectory, StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
-import {addFile} from '../../../store/files';
 import {openFile} from '../../../store/panels';
 import {synthesize} from '../../../tools/yosys';
 
@@ -33,14 +31,10 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
 
         await resultFile.write(result);
 
-        const id = uuidv4();
-        dispatch(addFile({
-            id,
-            file: resultFile
-        }));
         dispatch(openFile({
-            fileId: id,
-            split: true
+            file: resultFile,
+            split: true,
+            reload: true
         }));
     };
 

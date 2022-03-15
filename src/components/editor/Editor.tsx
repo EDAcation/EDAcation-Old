@@ -14,11 +14,12 @@ const EDITORS_BY_EXTENSION: Record<string, React.FC<BaseEditorProps>> = {
 };
 
 export interface EditorProps {
+    panelId: string;
     files: EditorFile[];
     currentFileId: string;
 }
 
-export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
+export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) => {
     const dispatch = useAppDispatch();
 
     const handleSave = (file: EditorFile) => {
@@ -63,10 +64,10 @@ export const Editor: React.FC<EditorProps> = ({files, currentFileId}) => {
 
     return (
         <>
-            <EditorType file={loadedFile} value={loadedFile.content} onChange={handleChange} onSave={handleSave} />
+            <EditorType panelId={panelId} file={loadedFile} value={loadedFile.content} onChange={handleChange} onSave={handleSave} />
 
             <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
-                {extension === 'v' && <EditorButtonYosys file={loadedFile} />}
+                {extension === 'v' && <EditorButtonYosys panelId={panelId} file={loadedFile} />}
             </Box>
         </>
     );

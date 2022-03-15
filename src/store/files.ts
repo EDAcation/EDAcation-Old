@@ -94,10 +94,10 @@ export const accessFiles = createAsyncThunk(
 
 export const loadFile = createAsyncThunk(
     'loadFile',
-    async (file: EditorFile) => {
+    async ({file, force = false}: {file: EditorFile; force?: boolean}) => {
         if (!file.isAccessible || !file.file) {
             throw new Error('Editor file is not accessible.');
-        } else if (file.isLoaded) {
+        } else if (!force && file.isLoaded) {
             throw new Error('Editor file is already loaded.');
         }
 
@@ -140,9 +140,11 @@ export const filesSlice = createSlice({
                 isSaved: true
             });
         },
+
         removeFile(state, action: PayloadAction<string>) {
             return state.filter((file) => file.id !== action.payload);
         },
+
         changeFile(state, action: PayloadAction<{fileId: string; content: string}>) {
             const file = state.find((f) => f.id === action.payload.fileId);
             if (!file) {
@@ -152,7 +154,7 @@ export const filesSlice = createSlice({
             file.isSaved = file.content === file.originalContent;
         }
     },
-    extraReducers: (builder) => {
+    extraReducers(builder) {
         builder.addCase(accessFile.fulfilled, (state, action) => {
             const file = state.find((file) => file.id === action.meta.arg.id);
             if (file && action.payload) {
@@ -174,7 +176,7 @@ export const filesSlice = createSlice({
         });
 
         builder.addCase(loadFile.fulfilled, (state, action) => {
-            const file = state.find((file) => file.id === action.meta.arg.id);
+            const file = state.find((file) => file.id === action.meta.arg.file.id);
             if (file) {
                 file.originalContent = action.payload;
                 file.content = action.payload;

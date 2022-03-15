@@ -24,7 +24,7 @@ export const Main = () => {
                 }
 
                 if (!file.isLoaded) {
-                    await dispatch(loadFile(file));
+                    await dispatch(loadFile({file}));
                     continue;
                 }
             }

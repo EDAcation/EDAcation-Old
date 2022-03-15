@@ -14,7 +14,7 @@ export type EditorMonacoProps = BaseEditorProps;
 // NOTE: Ugly hack to have file access in commands
 let latestFile: EditorFileLoaded;
 
-export const EditorMonaco: React.FC<EditorMonacoProps> = ({file, value, onChange, onSave}) => {
+export const EditorMonaco: React.FC<EditorMonacoProps> = ({panelId, file, value, onChange, onSave}) => {
     const theme = useAppSelector((state) => state.settings.theme);
 
     // NOTE: Ugly hack to have file access in commands
@@ -31,7 +31,7 @@ export const EditorMonaco: React.FC<EditorMonacoProps> = ({file, value, onChange
 
     return (
         <MonacoEditor
-            path={file.file.getFullPath()}
+            path={`${panelId}/${file.file.getFullPath()}`}
             theme={theme === 'light' ? 'vs-light' : 'vs-dark'}
             value={value}
             onMount={handleMount}

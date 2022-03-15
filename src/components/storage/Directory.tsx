@@ -1,10 +1,11 @@
-import {ActionList, ActionMenu, Box, StyledOcticon, Text} from '@primer/react';
+import {ActionMenu, Box, StyledOcticon, Text} from '@primer/react';
 import {ChevronDownIcon, ChevronRightIcon} from '@primer/octicons-react';
 import React, {useMemo, useState} from 'react';
 
 import {StorageDirectory, StorageEntry, StorageFile} from '../../storage';
 import {RightClickAnchor} from '../anchor/RightClickAnchor';
 
+import {Actions} from './Actions';
 import {File} from './File';
 
 export interface DirectoryProps {
@@ -104,9 +105,7 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
                 </ActionMenu.Anchor>
 
                 <ActionMenu.Overlay>
-                    <ActionList>
-                        <ActionList.Item>Test</ActionList.Item>
-                    </ActionList>
+                    <Actions entry={directory} />
                 </ActionMenu.Overlay>
             </ActionMenu>
 

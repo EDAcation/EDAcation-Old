@@ -14,7 +14,7 @@ export const PanelEditor: React.FC<BasePanelProps<PanelEditorType>> = ({panel}) 
         <>
             <Tabs panelId={panel.id} files={files} currentFileId={panel.currentFileId} />
 
-            <Editor files={files} currentFileId={panel.currentFileId} />
+            <Editor panelId={panel.id} files={files} currentFileId={panel.currentFileId} />
         </>
     );
 };
