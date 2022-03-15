@@ -1,4 +1,5 @@
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {createTransform} from 'redux-persist';
 
 import {Storage, StorageFile} from '../storage';
 
@@ -26,11 +27,44 @@ export interface EditorFileLoaded extends EditorFileAccessed {
     content: string;
 }
 
-// TODO: use persist transformer for serialization
-
 export type FilesState = EditorFile[];
 
 const initialState: FilesState = [];
+
+export type SerializedFilesState = {
+    id: string;
+    storageId: string;
+    path: string[];
+}[];
+
+export const FilesTransform = createTransform<FilesState, SerializedFilesState>(
+    (state) => {
+        return state.map((file) => ({
+            id: file.id,
+            storageId: file.storageId,
+            path: file.path
+        }));
+    },
+    (serializedState, _key, partialState) => {
+        return serializedState.map((serializedFile) => {
+            const storage = (partialState.storages as Storage<unknown, unknown>[]).find((storage) => storage.getID() === serializedFile.storageId);
+            if (!storage) {
+                throw new Error(`Unknown storage ID "${serializedFile.storageId}".`);
+            }
+
+            const file: EditorFile = {
+                ...serializedFile,
+                storage,
+                isAccessible: false,
+                isLoaded: false,
+                isSaved: true
+            };
+
+            return file;
+        });
+    },
+    {whitelist: ['files']}
+);
 
 export const doAccessFile = async (file: EditorFile) => {
     if (await file.storage.hasPermission()) {
@@ -103,7 +137,7 @@ export const filesSlice = createSlice({
                 path: action.payload.file.getPath(),
                 isAccessible: false,
                 isLoaded: false,
-                isSaved: false
+                isSaved: true
             });
         },
         removeFile(state, action: PayloadAction<string>) {
@@ -121,7 +155,7 @@ export const filesSlice = createSlice({
     extraReducers: (builder) => {
         builder.addCase(accessFile.fulfilled, (state, action) => {
             const file = state.find((file) => file.id === action.meta.arg.id);
-            if (file) {
+            if (file && action.payload) {
                 file.file = action.payload;
                 file.isAccessible = true;
                 file.isLoaded = false;
@@ -131,7 +165,7 @@ export const filesSlice = createSlice({
         builder.addCase(accessFiles.fulfilled, (state, action) => {
             action.meta.arg.forEach(({id}, index) => {
                 const file = state.find((file) => file.id === id);
-                if (file) {
+                if (file && action.payload[index]) {
                     file.file = action.payload[index];
                     file.isAccessible = true;
                     file.isLoaded = false;

@@ -8,19 +8,18 @@ import {panelsSlice} from './panels';
 import {createPersistor, createPersistReducer} from './persist';
 import {settingsSlice} from './settings';
 
-// createPersistReducer(
-const rootReducer = combineReducers({
+const rootReducer = createPersistReducer(combineReducers({
     settings: settingsSlice.reducer,
     storages: storagesSlice.reducer,
     files: filesSlice.reducer,
     panels: panelsSlice.reducer
-});
+}));
 
 export const store = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         immutableCheck: {
-            ignoredPaths: ['files', 'storages']
+            ignoredPaths: ['storages', 'files']
         },
         serializableCheck: {
             // Ignore redux-persist actions

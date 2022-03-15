@@ -4,6 +4,8 @@ import {persistReducer, persistStore} from 'redux-persist';
 
 import {serializeState, deserializeState} from '../serializable';
 
+import {FilesTransform} from './files';
+
 const DESERIALIZATION_ORDER = ['settings', 'storages', 'keys'];
 
 export const createPersistReducer = <S, A extends Action>(reducer: Reducer<S, A>) => persistReducer<S, A>({
@@ -35,7 +37,10 @@ export const createPersistReducer = <S, A extends Action>(reducer: Reducer<S, A>
             return state;
         }
         return data;
-    }
+    },
+    transforms: [
+        FilesTransform
+    ]
 }, reducer);
 
 export const createPersistor = persistStore;

@@ -11,8 +11,8 @@ export const PanelSplit: React.FC<BasePanelProps<PanelSplitType>> = ({panel}) =>
     return (
         <Allotment minSize={100} vertical={panel.direction === 'vertical'}>
             {panel.children.map((child) => (
-                <Allotment.Pane>
-                    <Panel key={child.id} panel={child} />
+                <Allotment.Pane key={child.id} >
+                    <Panel panel={child} />
                 </Allotment.Pane>
             ))}
         </Allotment>

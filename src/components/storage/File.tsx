@@ -16,12 +16,14 @@ export const File: React.FC<FileProps> = ({file}) => {
     const dispatch = useAppDispatch();
 
     const handleClick = async () => {
+        // Add the file
         const id = uuidv4();
         dispatch(addFile({
             id,
             file
         }));
 
+        // Open the file in an editor
         dispatch(openFile({
             fileId: id
         }));
