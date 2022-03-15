@@ -1,10 +1,11 @@
-import {Box, Button, ButtonClose, Spinner} from '@primer/react';
+import {Box, Button, Spinner} from '@primer/react';
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {Storage, StorageDirectory} from '../../storage';
 import {useAppSelector} from '../../store';
 import {accessFiles} from '../../store/files';
+import {ButtonClose} from '../button/ButtonClose';
 
 import {Directory} from './Directory';
 

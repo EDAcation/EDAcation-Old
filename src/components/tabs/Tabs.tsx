@@ -1,9 +1,10 @@
-import {ButtonClose, TabNav, Text} from '@primer/react';
+import {TabNav, Text} from '@primer/react';
 import React, {MouseEvent} from 'react';
 
 import {useAppDispatch} from '../../store';
 import {EditorFile} from '../../store/files';
 import {closeFile, viewFile} from '../../store/panels';
+import {ButtonClose} from '../button/ButtonClose';
 
 export interface TabsProps {
     panelId: string;
