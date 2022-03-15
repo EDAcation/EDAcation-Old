@@ -150,6 +150,10 @@ export abstract class StorageFile<DirectoryHandle, FileHandle, Serialized extend
 
 export interface StorageConstructor<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage> {
     new (id?: string): Storage<DirectoryHandle, FileHandle, Serialized>;
+
+    getType(): StorageType;
+    getName(): string;
+    getAddText(): string;
 }
 
 export interface SerializedStorage {

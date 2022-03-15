@@ -143,11 +143,9 @@ export const panelsSlice = createSlice({
 
             if (panel) {
                 const panelEditor = panel as PanelEditor;
-                panelEditor.fileIds.push(action.payload.fileId);
 
-                if (!panelEditor.fileIds.includes(panelEditor.currentFileId)) {
-                    panelEditor.currentFileId = action.payload.fileId;
-                }
+                panelEditor.fileIds.push(action.payload.fileId);
+                panelEditor.currentFileId = action.payload.fileId;
             } else {
                 const panelSplit = findPanelByType(state, PanelType.SPLIT) as PanelSplit;
 

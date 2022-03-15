@@ -1,8 +1,9 @@
-import {Box, StyledOcticon, Text} from '@primer/react';
+import {ActionList, ActionMenu, Box, StyledOcticon, Text} from '@primer/react';
 import {ChevronDownIcon, ChevronRightIcon} from '@primer/octicons-react';
 import React, {useMemo, useState} from 'react';
 
 import {StorageDirectory, StorageEntry, StorageFile} from '../../storage';
+import {RightClickAnchor} from '../anchor/RightClickAnchor';
 
 import {File} from './File';
 
@@ -12,6 +13,7 @@ export interface DirectoryProps {
 
 export const Directory: React.FC<DirectoryProps> = ({directory}) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [isActionsOpen, setIsActionsOpen] = useState(false);
     const [entries, setEntries] = useState<StorageEntry<unknown, unknown>[] | undefined>(undefined);
 
     const sortedEntries = useMemo(() => {
@@ -23,19 +25,90 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
         });
     }, [entries]);
 
-    const handleClick = async () => {
-        if (!isOpen) {
-            setEntries(await directory.getEntries());
+    const open = async () => {
+        setEntries(await directory.getEntries(true));
+        setIsOpen(true);
+    };
+
+    const close = () => {
+        setIsOpen(false);
+    };
+
+    const handleClick: React.MouseEventHandler = () => {
+        if (isActionsOpen) {
+            setIsActionsOpen(false);
+            return;
         }
-        setIsOpen(!isOpen);
+
+        if (isOpen) {
+            close();
+        } else {
+            open();
+        }
+    };
+
+    const handleKeyDown: React.KeyboardEventHandler = (event) => {
+        if (event.defaultPrevented || isActionsOpen) {
+            return;
+        }
+
+        switch (event.key) {
+            case 'ArrowLeft': {
+                close();
+                break;
+            }
+            case 'ArrowRight': {
+                open();
+                break;
+            }
+            case 'ArrowUp': {
+                // TODO: select previous item in tree
+                break;
+            }
+            case 'ArrowDown': {
+                // TODO: select next item in tree
+                break;
+            }
+            case 'Enter':
+            case ' ': {
+                if (isOpen) {
+                    close();
+                } else {
+                    open();
+                }
+                break;
+            }
+            case 'ContextMenu': {
+                setIsActionsOpen(!isActionsOpen);
+                break;
+            }
+            default: {
+                // Not a known key binding, so don't call prevent default
+                return;
+            }
+        }
+
+        event.preventDefault();
     };
 
     return (
         <>
-            <Text onClick={handleClick} style={{cursor: 'pointer', userSelect: 'none'}}>
-                <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} sx={{mr: 1}} />
-                {directory.getName()}
-            </Text>
+            <ActionMenu open={isActionsOpen} onOpenChange={(open) => setIsActionsOpen(open)}>
+                <ActionMenu.Anchor>
+                    <RightClickAnchor childProps={{onKeyDown: handleKeyDown}}>
+                        <Text onClick={handleClick} style={{cursor: 'pointer', userSelect: 'none'}}>
+                            <StyledOcticon icon={isOpen ? ChevronDownIcon : ChevronRightIcon} sx={{mr: 1}} />
+                            {directory.getName()}
+                        </Text>
+                    </RightClickAnchor>
+                </ActionMenu.Anchor>
+
+                <ActionMenu.Overlay>
+                    <ActionList>
+                        <ActionList.Item>Test</ActionList.Item>
+                    </ActionList>
+                </ActionMenu.Overlay>
+            </ActionMenu>
 
             {isOpen && sortedEntries && (
                 <Box>

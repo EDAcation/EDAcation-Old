@@ -3,7 +3,7 @@ import React from 'react';
 
 import {storageByType, StorageType} from '../../storage';
 
-export interface AddStorageButtonProps extends ButtonProps {
+export interface AddStorageButtonProps extends Omit<ButtonProps, 'children'> {
     storageType: StorageType;
 }
 
@@ -11,6 +11,8 @@ export const AddStorageButton: React.FC<AddStorageButtonProps> = ({storageType, 
     const storage = storageByType[storageType];
 
     return (
-        <Button {...props}>{storage.getAddText()}</Button>
+        <Button {...props}>
+            {storage.getAddText()}
+        </Button>
     );
 };
