@@ -23,9 +23,9 @@ export const store = configureStore({
         },
         serializableCheck: {
             // Ignore redux-persist actions
-            ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
+            ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
 
-            // TODO: fix serialiability warnings by ignoring stuff here
+            ignoredPaths: ['storages', 'files']
         }
     })
 });

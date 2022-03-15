@@ -102,7 +102,7 @@ const closePanel = (root: Panel, panel: Panel) => {
 
     if (parentPanel.type === PanelType.SPLIT) {
         const panelSplit = parentPanel as PanelSplit;
-        panelSplit.children.splice(panelSplit.children.findIndex((panel) => panel.id === panel.id), 1);
+        panelSplit.children.splice(panelSplit.children.findIndex((p) => p.id === panel.id), 1);
     } else {
         throw new Error(`Panel "${parentPanel.id}" can't have children.`);
     }

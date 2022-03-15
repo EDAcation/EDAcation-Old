@@ -23,7 +23,7 @@ export const Tabs: React.FC<TabsProps> = ({panelId, files, currentFileId}) => {
         }));
     };
 
-    const handleClose = async (file: EditorFile, index: number, event: MouseEvent) => {
+    const handleClose = async (file: EditorFile, _index: number, event: MouseEvent) => {
         event.stopPropagation();
 
         if (!file.isSaved) {

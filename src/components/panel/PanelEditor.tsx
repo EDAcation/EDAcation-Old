@@ -1,23 +1,14 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 
-import {useAppDispatch, useAppSelector} from '../../store';
-import {PanelEditor as PanelEditorType, removePanel} from '../../store/panels';
+import {useAppSelector} from '../../store';
+import {PanelEditor as PanelEditorType} from '../../store/panels';
 import {Editor} from '../editor/Editor';
 import {Tabs} from '../tabs/Tabs';
 
 import {BasePanelProps} from './BasePanel';
 
 export const PanelEditor: React.FC<BasePanelProps<PanelEditorType>> = ({panel}) => {
-    const dispatch = useAppDispatch();
     const files = useAppSelector((state) => state.files.filter((file) => panel.fileIds.includes(file.id)));
-
-    useEffect(() => {
-        if (files.length === 0) {
-            dispatch(removePanel(panel));
-            // TODO: remove debug logging
-            console.log('panel is emtpy, removing it');
-        }
-    }, [dispatch, files, panel]);
 
     return (
         <>
