@@ -33,6 +33,7 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
 
         dispatch(openFile({
             file: resultFile,
+            existing: true,
             split: true,
             reload: true
         }));

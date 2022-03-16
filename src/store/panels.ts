@@ -42,7 +42,7 @@ const panel: PanelSplit = {
 
 const initialState: PanelsState = panel;
 
-const findPanelById = (panel: Panel, id: string): Panel | null => {
+export const findPanelById = (panel: Panel, id: string): Panel | null => {
     if (panel.id === id) {
         return panel;
     }
@@ -59,7 +59,7 @@ const findPanelById = (panel: Panel, id: string): Panel | null => {
     return null;
 };
 
-const findPanelByType = (panel: Panel, type: PanelType): Panel | null => {
+export const findPanelByType = (panel: Panel, type: PanelType): Panel | null => {
     if (panel.type === type) {
         return panel;
     }
@@ -76,7 +76,7 @@ const findPanelByType = (panel: Panel, type: PanelType): Panel | null => {
     return null;
 };
 
-const findPanelByFileId = (panel: Panel, fileId: string, panelId?: string): PanelEditor | null => {
+export const findPanelByFileId = (panel: Panel, fileId: string, panelId?: string): PanelEditor | null => {
     if (panel.type === PanelType.EDITOR && panel.fileIds.includes(fileId)) {
         if (!panelId || panel.id === panelId) {
             return panel;
@@ -141,9 +141,17 @@ const closePanel = (root: Panel, panel: Panel) => {
     }
 };
 
+interface OpenFilePayload {
+    file: StorageFile<unknown, unknown>;
+    panelId?: string;
+    existing?: boolean;
+    split?: boolean;
+    reload?: boolean;
+}
+
 export const openFile = createAsyncThunk(
     'openFile',
-    async ({file, reload, ...payload}: {file: StorageFile<unknown, unknown>; panelId?: string; split?: boolean; reload?: boolean}, thunkAPI) => {
+    async ({file, reload, ...payload}: OpenFilePayload, thunkAPI) => {
         const state = thunkAPI.getState() as RootState;
 
         // Check if this file already exists
@@ -232,6 +240,11 @@ export const panelsSlice = createSlice({
                     panel = null;
                 }
             }
+
+            if (!panel && action.payload.existing) {
+                panel = findPanelByFileId(state, action.payload.fileId);
+            }
+
             if (!panel && !action.payload.split) {
                 panel = findPanelByType(state, PanelType.EDITOR);
             }

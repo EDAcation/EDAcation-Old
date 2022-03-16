@@ -3,8 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {Storage, StorageDirectory} from '../../storage';
-import {useAppSelector} from '../../store';
-import {accessFiles} from '../../store/files';
+import {accessFilesForStorage} from '../../store/files';
 import {ButtonClose} from '../button/ButtonClose';
 
 import {Directory} from './Directory';
@@ -16,7 +15,6 @@ export interface StorageProps {
 
 export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => {
     const dispatch = useDispatch();
-    const files = useAppSelector((state) => state.files);
 
     const [hasPermission, setHasPermission] = useState(false);
     const [root, setRoot] = useState<StorageDirectory<unknown, unknown> | undefined>(undefined);
@@ -34,7 +32,7 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
 
         if (result) {
             // Access files from this storage provider
-            dispatch(accessFiles(files.filter((file) => file.storage.getID() === storage.getID())));
+            dispatch(accessFilesForStorage(storage.getID()));
         }
     };
 

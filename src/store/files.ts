@@ -2,6 +2,7 @@ import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {createTransform} from 'redux-persist';
 
 import {Storage, StorageFile} from '../storage';
+import {RootState} from '../store';
 
 export interface EditorFile {
     id: string;
@@ -63,7 +64,9 @@ export const FilesTransform = createTransform<FilesState, SerializedFilesState>(
             return file;
         });
     },
-    {whitelist: ['files']}
+    {
+        whitelist: ['files']
+    }
 );
 
 export const doAccessFile = async (file: EditorFile) => {
@@ -81,12 +84,14 @@ export const accessFile = createAsyncThunk(
     }
 );
 
-export const accessFiles = createAsyncThunk(
+export const accessFilesForStorage = createAsyncThunk(
     'accessFiles',
-    async (files: EditorFile[]) => {
-        const results: (StorageFile<unknown, unknown> | undefined)[] = [];
-        for (const file of files) {
-            results.push(await doAccessFile(file));
+    async (storageId: string, thunkAPI) => {
+        const state = thunkAPI.getState() as RootState;
+
+        const results: ([string, StorageFile<unknown, unknown> | undefined])[] = [];
+        for (const file of state.files.filter((file) => file.storageId === storageId)) {
+            results.push([file.id, await doAccessFile(file)]);
         }
         return results;
     }
@@ -157,19 +162,19 @@ export const filesSlice = createSlice({
     extraReducers(builder) {
         builder.addCase(accessFile.fulfilled, (state, action) => {
             const file = state.find((file) => file.id === action.meta.arg.id);
-            if (file && action.payload) {
+            if (file) {
                 file.file = action.payload;
-                file.isAccessible = true;
+                file.isAccessible = !!action.payload;
                 file.isLoaded = false;
             }
         });
 
-        builder.addCase(accessFiles.fulfilled, (state, action) => {
-            action.meta.arg.forEach(({id}, index) => {
+        builder.addCase(accessFilesForStorage.fulfilled, (state, action) => {
+            action.payload.forEach(([id, storageFile]) => {
                 const file = state.find((file) => file.id === id);
-                if (file && action.payload[index]) {
-                    file.file = action.payload[index];
-                    file.isAccessible = true;
+                if (file) {
+                    file.file = storageFile;
+                    file.isAccessible = !!storageFile;
                     file.isLoaded = false;
                 }
             });
