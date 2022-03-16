@@ -3,6 +3,7 @@ import React, {useEffect} from 'react';
 import {Helmet} from 'react-helmet';
 
 import {useAppSelector} from '../../store';
+import {Popups} from '../popups/Popups';
 
 import {Header} from './Header';
 import {Main} from './Main';
@@ -23,6 +24,8 @@ export const App = () => {
             <Header />
             <Main />
             <Footer />
+
+            <Popups />
         </>
     );
 };

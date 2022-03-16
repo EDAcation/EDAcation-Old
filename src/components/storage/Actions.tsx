@@ -4,6 +4,7 @@ import React, {Fragment} from 'react';
 import {StorageDirectory, StorageEntry, StorageEntryType, StorageFile} from '../../storage';
 import {AppDispatch, useAppDispatch} from '../../store';
 import {openFile} from '../../store/panels';
+import {openPopup} from '../../store/popups';
 
 export interface Action {
     name: string;
@@ -16,9 +17,48 @@ export interface Action {
 
 export const ACTIONS: Action[][] = [
     [{
+        name: 'New File',
+        visible: (entry) => entry.getType() === StorageEntryType.DIRECTORY,
+        executeDirectory(_directory, dispatch) {
+            dispatch(openPopup({
+                title: 'New File',
+                form: [{
+                    name: 'name',
+                    label: 'File Name'
+                }],
+                actions: [{
+                    label: 'Cancel',
+                    close: true
+                }, {
+                    label: 'Create File',
+                    submit: true
+                }]
+            }));
+        }
+    }, {
+        name: 'New Folder',
+        visible: (entry) => entry.getType() === StorageEntryType.DIRECTORY,
+        executeDirectory(_directory, dispatch) {
+            dispatch(openPopup({
+                title: 'New Folder',
+                form: [{
+                    name: 'name',
+                    label: 'Folder Name'
+                }],
+                actions: [{
+                    label: 'Cancel',
+                    close: true
+                }, {
+                    label: 'Create Folder',
+                    submit: true
+                }]
+            }));
+        }
+    }],
+    [{
         name: 'Open to the Side',
         visible: (entry) => entry.getType() === StorageEntryType.FILE,
-        executeFile: (file, dispatch) => {
+        executeFile(file, dispatch) {
             dispatch(openFile({
                 file,
                 split: true
@@ -33,8 +73,18 @@ export const ACTIONS: Action[][] = [
         }
     }, {
         name: 'Delete',
-        executeEntry() {
-            // TODO
+        executeEntry(entry, dispatch) {
+            dispatch(openPopup({
+                title: 'Delete File',
+                content: `Are you sure you want to delete "${entry.getName()}"?`,
+                actions: [{
+                    label: 'Cancel',
+                    close: true
+                }, {
+                    label: 'Delete File',
+                    submit: true
+                }]
+            }));
         }
     }]
 ];
@@ -65,7 +115,7 @@ export const Actions: React.FC<ActionsProps> = ({entry, ...props}) => {
             )
         ).filter((actions) => actions.length > 0);
 
-    console.log(filteredActions);
+    // TODO: ActionMenu not closing on item click
 
     return (
         <ActionList {...props}>

@@ -5,6 +5,7 @@ import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER} from 'redux-persist';
 import {storagesSlice} from './storages';
 import {filesSlice} from './files';
 import {panelsSlice} from './panels';
+import {popupsSlice} from './popups';
 import {createPersistor, createPersistReducer} from './persist';
 import {settingsSlice} from './settings';
 
@@ -12,7 +13,8 @@ const rootReducer = createPersistReducer(combineReducers({
     settings: settingsSlice.reducer,
     storages: storagesSlice.reducer,
     files: filesSlice.reducer,
-    panels: panelsSlice.reducer
+    panels: panelsSlice.reducer,
+    popups: popupsSlice.reducer
 }));
 
 export const store = configureStore({
