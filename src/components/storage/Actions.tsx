@@ -28,10 +28,12 @@ export const ACTIONS: Action[][] = [
                 }],
                 actions: [{
                     label: 'Cancel',
-                    close: true
+                    type: 'close',
+                    color: 'normal'
                 }, {
                     label: 'Create File',
-                    submit: true
+                    type: 'submit',
+                    color: 'primary'
                 }]
             }));
         }
@@ -47,10 +49,12 @@ export const ACTIONS: Action[][] = [
                 }],
                 actions: [{
                     label: 'Cancel',
-                    close: true
+                    type: 'close',
+                    color: 'normal'
                 }, {
                     label: 'Create Folder',
-                    submit: true
+                    type: 'submit',
+                    color: 'primary'
                 }]
             }));
         }
@@ -79,10 +83,12 @@ export const ACTIONS: Action[][] = [
                 content: `Are you sure you want to delete "${entry.getName()}"?`,
                 actions: [{
                     label: 'Cancel',
-                    close: true
+                    type: 'close',
+                    color: 'normal'
                 }, {
                     label: 'Delete File',
-                    submit: true
+                    type: 'submit',
+                    color: 'danger'
                 }]
             }));
         }

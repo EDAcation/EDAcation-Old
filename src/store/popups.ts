@@ -1,3 +1,4 @@
+import {DialogProps, DialogButtonProps} from '@primer/react/lib-esm/Dialog/Dialog';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {v4 as uuidv4} from 'uuid';
 
@@ -5,15 +6,16 @@ export interface Popup {
     id: string;
     title: string;
     content?: string;
+    width?: DialogProps['width'];
     form?: {
         name: string;
         label: string;
         defaultValue?: string;
     }[];
     actions?: {
+        color: DialogButtonProps['buttonType'];
         label: string;
-        close?: boolean;
-        submit?: boolean;
+        type?: DialogButtonProps['type'] | 'close';
     }[];
 }
 
