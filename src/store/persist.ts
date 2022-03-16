@@ -40,6 +40,10 @@ export const createPersistReducer = <S, A extends Action>(reducer: Reducer<S, A>
     },
     transforms: [
         FilesTransform
+    ],
+    blacklist: [
+        'popups',
+        'storageEntries'
     ]
 }, reducer);
 

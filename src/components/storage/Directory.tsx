@@ -1,8 +1,11 @@
 import {ActionMenu, Box, StyledOcticon, Text} from '@primer/react';
 import {ChevronDownIcon, ChevronRightIcon} from '@primer/octicons-react';
-import React, {useMemo, useState} from 'react';
+import React, {useState} from 'react';
 
-import {StorageDirectory, StorageEntry, StorageFile} from '../../storage';
+import {selectStorageEntriesForDirectory} from '../../selectors';
+import {StorageDirectory, StorageFile} from '../../storage';
+import {useAppDispatch, useAppSelector} from '../../store';
+import {loadStorageEntries} from '../../store/storage-entries';
 import {RightClickAnchor} from '../anchor/RightClickAnchor';
 
 import {Actions} from './Actions';
@@ -13,21 +16,15 @@ export interface DirectoryProps {
 }
 
 export const Directory: React.FC<DirectoryProps> = ({directory}) => {
+    const dispatch = useAppDispatch();
+    const entries = useAppSelector((state) => selectStorageEntriesForDirectory(state, directory));
+
     const [isOpen, setIsOpen] = useState(false);
     const [isActionsOpen, setIsActionsOpen] = useState(false);
-    const [entries, setEntries] = useState<StorageEntry<unknown, unknown>[] | undefined>(undefined);
-
-    const sortedEntries = useMemo(() => {
-        return entries?.sort((a, b) => {
-            if (a.getType() !== b.getType()) {
-                return a.getType() < b.getType() ? -1 : 1;
-            }
-            return a.getName() < b.getName() ? -1 : 1;
-        });
-    }, [entries]);
 
     const open = async () => {
-        setEntries(await directory.getEntries(true));
+        await dispatch(loadStorageEntries(directory));
+
         setIsOpen(true);
     };
 
@@ -109,9 +106,9 @@ export const Directory: React.FC<DirectoryProps> = ({directory}) => {
                 </ActionMenu.Overlay>
             </ActionMenu>
 
-            {isOpen && sortedEntries && (
+            {isOpen && entries && (
                 <Box>
-                    {sortedEntries.map((entry) => {
+                    {entries.map((entry) => {
                         let component: JSX.Element;
                         if (entry instanceof StorageDirectory) {
                             component = <Directory directory={entry} />;

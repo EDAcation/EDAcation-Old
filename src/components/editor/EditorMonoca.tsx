@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import MonacoEditor, {loader, OnMount} from '@monaco-editor/react';
 
 import {useAppSelector} from '../../store';
@@ -20,14 +20,17 @@ export const EditorMonaco: React.FC<EditorMonacoProps> = ({panelId, file, value,
     // NOTE: Ugly hack to have file access in commands
     latestFile = file;
 
-    const handleMount: OnMount = (editor, monaco) => {
-        // @ts-expect-error: KEY_S does not exist on the type, but gives the correct value
-        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
-            if (onSave) {
-                onSave(latestFile);
-            }
-        });
-    };
+    const handleMount: OnMount = useCallback(
+        (editor, monaco) => {
+            // @ts-expect-error: KEY_S does not exist on the type, but gives the correct value
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
+                if (onSave) {
+                    onSave(latestFile);
+                }
+            });
+        },
+        [onSave]
+    );
 
     return (
         <MonacoEditor

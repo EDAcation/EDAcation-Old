@@ -1,5 +1,5 @@
 import {Box, Spinner, Text} from '@primer/react';
-import React from 'react';
+import React, {useCallback} from 'react';
 
 import {useAppDispatch} from '../../store';
 import {saveFile, changeFile, EditorFile, EditorFileLoaded} from '../../store/files';
@@ -22,18 +22,24 @@ export interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) => {
     const dispatch = useAppDispatch();
 
-    const handleSave = (file: EditorFile) => {
-        // TODO: Will generate an error if the content on disk was changed by antoher program.
-        //       This should error should trigger a Primer React popup, which asks for confirmation.
-        dispatch(saveFile({file}));
-    };
+    const handleSave = useCallback(
+        (file: EditorFile) => {
+            // TODO: Will generate an error if the content on disk was changed by antoher program.
+            //       This should error should trigger a Primer React popup, which asks for confirmation.
+            dispatch(saveFile({file}));
+        },
+        [dispatch]
+    );
 
-    const handleChange = (file: EditorFile, content: string) => {
-        dispatch(changeFile({
-            fileId: file.id,
-            content
-        }));
-    };
+    const handleChange = useCallback(
+        (file: EditorFile, content: string) => {
+            dispatch(changeFile({
+                fileId: file.id,
+                content
+            }));
+        },
+        [dispatch]
+    );
 
     const file = files.length > 0 ? files.find((file) => file.id === currentFileId) : null;
 

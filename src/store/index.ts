@@ -3,6 +3,7 @@ import {useDispatch, useSelector, TypedUseSelectorHook} from 'react-redux';
 import {FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER} from 'redux-persist';
 
 import {storagesSlice} from './storages';
+import {storageEntriesSlice} from './storage-entries';
 import {filesSlice} from './files';
 import {panelsSlice} from './panels';
 import {popupsSlice} from './popups';
@@ -12,6 +13,7 @@ import {settingsSlice} from './settings';
 const rootReducer = createPersistReducer(combineReducers({
     settings: settingsSlice.reducer,
     storages: storagesSlice.reducer,
+    storageEntries: storageEntriesSlice.reducer,
     files: filesSlice.reducer,
     panels: panelsSlice.reducer,
     popups: popupsSlice.reducer
@@ -21,13 +23,13 @@ export const store = configureStore({
     reducer: rootReducer,
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         immutableCheck: {
-            ignoredPaths: ['storages', 'files']
+            ignoredPaths: ['storages', 'storageEntries', 'files']
         },
         serializableCheck: {
             // Ignore redux-persist actions
             ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
 
-            ignoredPaths: ['storages', 'files']
+            ignoredPaths: ['storages', 'storageEntries', 'files']
         }
     })
 });

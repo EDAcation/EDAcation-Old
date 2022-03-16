@@ -17,6 +17,7 @@ export interface Popup {
         label: string;
         type?: DialogButtonProps['type'] | 'close';
     }[];
+    onSubmit?: () => Promise<void>;
 }
 
 export type PopupsState = Popup[];
@@ -33,8 +34,8 @@ export const popupsSlice = createSlice({
                 ...action.payload
             });
         },
-        closePopup(state, action: PayloadAction<Popup>) {
-            return state.filter((popup) => popup.id !== action.payload.id);
+        closePopup(state, action: PayloadAction<string>) {
+            return state.filter((popup) => popup.id !== action.payload);
         }
     }
 });

@@ -1,10 +1,12 @@
 import {ActionList, ActionListProps} from '@primer/react';
+import {PayloadAction} from '@reduxjs/toolkit';
 import React, {Fragment} from 'react';
 
 import {StorageDirectory, StorageEntry, StorageEntryType, StorageFile} from '../../storage';
 import {AppDispatch, useAppDispatch} from '../../store';
 import {openFile} from '../../store/panels';
 import {openPopup} from '../../store/popups';
+import {deleteStorageEntry} from '../../store/storage-entries';
 
 export interface Action {
     name: string;
@@ -77,23 +79,45 @@ export const ACTIONS: Action[][] = [
         }
     }, {
         name: 'Delete',
+        disabled: (entry) => entry.getParent() === null,
         executeEntry(entry, dispatch) {
             dispatch(openPopup({
-                title: 'Delete File',
+                title: 'Delete',
                 content: `Are you sure you want to delete "${entry.getName()}"?`,
                 actions: [{
                     label: 'Cancel',
                     type: 'close',
                     color: 'normal'
                 }, {
-                    label: 'Delete File',
+                    label: 'Delete',
                     type: 'submit',
                     color: 'danger'
-                }]
+                }],
+                async onSubmit() {
+                    const result = await dispatch(deleteStorageEntry(entry));
+                    handleResult(dispatch, result);
+                }
             }));
         }
     }]
 ];
+
+const handleResult = (dispatch: AppDispatch, result: PayloadAction<unknown, string, {requestStatus: 'fulfilled' | 'rejected'}>) => {
+    if (result.meta.requestStatus === 'rejected') {
+        // @ts-expect-error: error does not exist on PayloadAction
+        const error = result.error;
+
+        dispatch(openPopup({
+            title: 'Error',
+            content: error && error.message ? error.message : 'Unknown error',
+            actions: [{
+                label: 'Ok',
+                type: 'close',
+                color: 'normal'
+            }]
+        }));
+    }
+};
 
 export interface ActionsProps extends ActionListProps {
     entry: StorageEntry<unknown, unknown>;
