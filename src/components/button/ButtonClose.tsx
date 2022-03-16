@@ -2,7 +2,7 @@ import {XIcon} from '@primer/octicons-react';
 import {sx, SxProp} from '@primer/react';
 import {get} from '@primer/react/lib/constants';
 import {ComponentProps} from '@primer/react/lib/utils/types';
-import React, {forwardRef} from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const StyledButton = styled.button<SxProp>`
@@ -22,12 +22,12 @@ const StyledButton = styled.button<SxProp>`
     ${sx};
 `;
 
-export type ButtonCloseProps = ComponentProps<typeof ButtonClose>;
+export type ButtonCloseProps = ComponentProps<typeof StyledButton>;
 
-export const ButtonClose = forwardRef<HTMLButtonElement, ComponentProps<typeof StyledButton>>((props, ref) => {
+export const ButtonClose: React.FC<ButtonCloseProps> = (props) => {
     return (
-        <StyledButton ref={ref} aria-label="Close" {...props}>
+        <StyledButton aria-label="Close" {...props}>
             <XIcon />
         </StyledButton>
     );
-});
+};
