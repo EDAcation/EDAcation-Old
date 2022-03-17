@@ -13,6 +13,47 @@ export const loadStorageEntries = createAsyncThunk(
     }
 );
 
+interface CreateStorageDirectoryPayload {
+    parent: StorageDirectory<unknown, unknown>;
+    name: string;
+}
+
+export const createStorageDirectory = createAsyncThunk(
+    'createStorageEntry',
+    async ({parent, name}: CreateStorageDirectoryPayload, thunkAPI) => {
+        const directory = await parent.createDirectory(name);
+
+        await thunkAPI.dispatch(loadStorageEntries(parent));
+
+        return directory;
+    }
+);
+
+interface CreateStorageFilePayload {
+    parent: StorageDirectory<unknown, unknown>;
+    name: string;
+    content?: unknown;
+    isJSON?: boolean;
+}
+
+export const createStorageFile = createAsyncThunk(
+    'createStorageEntry',
+    async ({parent, name, content, isJSON}: CreateStorageFilePayload, thunkAPI) => {
+        const file = await parent.createFile(name);
+        if (content) {
+            if (isJSON) {
+                await file.writeJSON(content);
+            } else {
+                await file.write(content as string);
+            }
+        }
+
+        await thunkAPI.dispatch(loadStorageEntries(parent));
+
+        return file;
+    }
+);
+
 export const deleteStorageEntry = createAsyncThunk(
     'deleteStorageEntry',
     async (entry: StorageEntry<unknown, unknown>, thunkAPI) => {
@@ -20,7 +61,7 @@ export const deleteStorageEntry = createAsyncThunk(
 
         const parent = entry.getParent();
         if (parent) {
-            thunkAPI.dispatch(loadStorageEntries(parent));
+            await thunkAPI.dispatch(loadStorageEntries(parent));
         }
     }
 );

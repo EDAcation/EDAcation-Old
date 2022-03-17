@@ -6,7 +6,7 @@ import {StorageDirectory, StorageEntry, StorageEntryType, StorageFile} from '../
 import {AppDispatch, useAppDispatch} from '../../store';
 import {openFile} from '../../store/panels';
 import {openPopup} from '../../store/popups';
-import {deleteStorageEntry} from '../../store/storage-entries';
+import {createStorageDirectory, createStorageFile, deleteStorageEntry} from '../../store/storage-entries';
 
 export interface Action {
     name: string;
@@ -21,7 +21,8 @@ export const ACTIONS: Action[][] = [
     [{
         name: 'New File',
         visible: (entry) => entry.getType() === StorageEntryType.DIRECTORY,
-        executeDirectory(_directory, dispatch) {
+        executeDirectory(directory, dispatch) {
+            // TODO: add values generic type to openPopup
             dispatch(openPopup({
                 title: 'New File',
                 form: [{
@@ -36,13 +37,20 @@ export const ACTIONS: Action[][] = [
                     label: 'Create File',
                     type: 'submit',
                     color: 'primary'
-                }]
+                }],
+                async onSubmit(values) {
+                    const result = await dispatch(createStorageFile({
+                        parent: directory,
+                        name: values.name as string
+                    }));
+                    handleResult(dispatch, result);
+                }
             }));
         }
     }, {
         name: 'New Folder',
         visible: (entry) => entry.getType() === StorageEntryType.DIRECTORY,
-        executeDirectory(_directory, dispatch) {
+        executeDirectory(directory, dispatch) {
             dispatch(openPopup({
                 title: 'New Folder',
                 form: [{
@@ -57,7 +65,14 @@ export const ACTIONS: Action[][] = [
                     label: 'Create Folder',
                     type: 'submit',
                     color: 'primary'
-                }]
+                }],
+                async onSubmit(values) {
+                    const result = await dispatch(createStorageDirectory({
+                        parent: directory,
+                        name: values.name as string
+                    }));
+                    handleResult(dispatch, result);
+                }
             }));
         }
     }],
