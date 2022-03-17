@@ -1,19 +1,24 @@
 import {Text} from '@primer/react';
 import {Dialog} from '@primer/react/lib-esm/Dialog/Dialog';
+import {Field} from 'formik';
 import React, {useRef, useState} from 'react';
+import * as yup from 'yup';
 
 import {useAppDispatch} from '../../store';
 import {closePopup, Popup as StatePopup} from '../../store/popups';
+import {FieldTextInput} from '../form/FieldTextInput';
+import {Form, FormProps} from '../form/Form';
 
 export interface PopupProps {
     popup: StatePopup;
 }
 
+type Values = Record<string, unknown>;
+
 export const Popup: React.FC<PopupProps> = ({popup}) => {
     const dispatch = useAppDispatch();
 
     const formRef = useRef<HTMLFormElement>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleClose = () => {
         dispatch(closePopup(popup.id));
@@ -25,39 +30,55 @@ export const Popup: React.FC<PopupProps> = ({popup}) => {
         }
     };
 
-    const handleSubmit: React.FormEventHandler = async (event) => {
-        console.log('submit');
-        event.preventDefault();
-
-        setIsSubmitting(true);
-
-        // TODO: include form values
+    const handleSubmit: FormProps<Values>['onSubmit'] = async (values, helpers) => {
         if (popup.onSubmit) {
-            await popup.onSubmit();
+            await popup.onSubmit(values);
         }
 
-        setIsSubmitting(false);
+        helpers.setSubmitting(false);
         handleClose();
     };
 
-    // TODO: add form values (Formik?)
+    const fields = popup.form || [];
+    const initialValues: Values = fields.reduce((prev, field) => {
+        prev[field.name] = field.defaultValue || '';
+        return prev;
+    }, {});
+    const validationSchema = yup.object(fields.reduce((prev, field) => {
+        prev[field.name] = field.validate ? field.validate() : yup.string().required();
+        return prev;
+    }, {}));
+
+    // TODO: auto focus on first field
 
     return (
-        <Dialog
-            title={popup.title}
-            width={popup.width || 'large'}
-            footerButtons={popup.actions?.map((action) => ({
-                buttonType: action.color,
-                content: action.label,
-                type: action.type === 'close' ? 'button' : action.type,
-                onClick: action.type === 'close' ? handleClose : (action.type === 'submit' ? handleSubmitClick : undefined),
-                disabled: isSubmitting
-            }))}
-            onClose={handleClose}
+        <Form<Values>
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            validateOnMount
+            onSubmit={handleSubmit}
+            formRef={formRef}
         >
-            <form ref={formRef} onSubmit={handleSubmit}>
-                {popup.content && <Text>{popup.content}</Text>}
-            </form>
-        </Dialog>
+            {({isSubmitting, isValid}) => (
+                <Dialog
+                    title={popup.title}
+                    width={popup.width || 'large'}
+                    footerButtons={popup.actions?.map((action) => ({
+                        buttonType: action.color,
+                        content: action.label,
+                        type: action.type === 'close' ? 'button' : action.type,
+                        onClick: action.type === 'close' ? handleClose : (action.type === 'submit' ? handleSubmitClick : undefined),
+                        disabled: isSubmitting || (action.type === 'submit' && !isValid)
+                    }))}
+                    onClose={handleClose}
+                >
+                    {popup.content && <Text>{popup.content}</Text>}
+
+                    {fields.map((field) => (
+                        <Field key={field.name} component={FieldTextInput} name={field.name} type="text" placeholder={field.label} />
+                    ))}
+                </Dialog>
+            )}
+        </Form>
     );
 };
