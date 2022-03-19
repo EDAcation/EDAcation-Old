@@ -4,6 +4,7 @@ import React from 'react';
 import {StorageDirectory, StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
 import {openFile} from '../../../store/panels';
+import {createStorageDirectory, createStorageFile} from '../../../store/storage-entries';
 import {synthesize} from '../../../tools/yosys';
 
 import {BaseEditorButtonProps} from './BaseEditorButton';
@@ -17,22 +18,20 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
 
         const directory = file.file.getParent();
 
-        const resultDirectory = await directory.createDirectory(file.file.getNameWithoutExtension());
-        const resultEntry = await resultDirectory.getEntry('rtl.dot', true);
-        if (resultEntry instanceof StorageDirectory) {
-            throw new Error(`Output file "${resultEntry.getFullPath()}" is already a directory.`);
-        }
+        // TODO: handle rejected action results
 
-        // TODO: check if file is not a directory
-        let resultFile = resultEntry as StorageFile<unknown, unknown>;
-        if (!resultEntry) {
-            resultFile = await resultDirectory.createFile('rtl.dot');
-        }
-
-        await resultFile.write(result);
+        const actionDirectory = await dispatch(createStorageDirectory({
+            parent: directory,
+            name: file.file.getNameWithoutExtension()
+        }));
+        const actionFile = await dispatch(createStorageFile({
+            parent: actionDirectory.payload as StorageDirectory<unknown, unknown>,
+            name: 'rtl.dot',
+            content: result
+        }));
 
         dispatch(openFile({
-            file: resultFile,
+            file: actionFile.payload as StorageFile<unknown, unknown>,
             existing: true,
             split: true,
             reload: true
