@@ -1,7 +1,7 @@
 import {Text} from '@primer/react';
 import {Dialog} from '@primer/react/lib-esm/Dialog/Dialog';
 import {Field} from 'formik';
-import React, {useRef, useState} from 'react';
+import React, {useRef} from 'react';
 import * as yup from 'yup';
 
 import {useAppDispatch} from '../../store';
@@ -9,11 +9,11 @@ import {closePopup, Popup as StatePopup} from '../../store/popups';
 import {FieldTextInput} from '../form/FieldTextInput';
 import {Form, FormProps} from '../form/Form';
 
+type Values = Record<string, string>;
+
 export interface PopupProps {
     popup: StatePopup;
 }
-
-type Values = Record<string, unknown>;
 
 export const Popup: React.FC<PopupProps> = ({popup}) => {
     const dispatch = useAppDispatch();

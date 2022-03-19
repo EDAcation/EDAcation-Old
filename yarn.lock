@@ -1005,7 +1005,7 @@
     "@types/d3-interpolate" "^1"
     "@types/d3-selection" "^1"
 
-"@types/emscripten@^1.39.5":
+"@types/emscripten@^1.39.6":
   version "1.39.6"
   resolved "https://registry.yarnpkg.com/@types/emscripten/-/emscripten-1.39.6.tgz#698b90fe60d44acf93c31064218fbea93fbfd85a"
   integrity sha512-H90aoynNhhkQP6DRweEjJp5vfUVdIj7tdPLsu7pq89vODD/lcugKfZOsfgwpvM6XUewEp2N5dCg1Uf3Qe55Dcg==
@@ -1032,11 +1032,6 @@
   version "4.14.180"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.180.tgz#4ab7c9ddfc92ec4a887886483bc14c79fb380670"
   integrity sha512-XOKXa1KIxtNXgASAnwj7cnttJxS4fksBRywK/9LzRV5YxrF80BXZIGeQSuoESQ/VkUj30Ae0+YcuHc15wJCB2g==
-
-"@types/node@^16.11.1":
-  version "16.11.26"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.26.tgz#63d204d136c9916fb4dcd1b50f9740fe86884e47"
-  integrity sha512-GZ7bu5A6+4DtG7q9GsoHXy3ALcgeIHP4NnL0Vv2wu0uUB/yQex26v0tf6/na1mm0+bS9Uw+0DFex7aaKr2qawQ==
 
 "@types/node@^17.0.21":
   version "17.0.21"
@@ -4056,13 +4051,13 @@ yargs@^17.3.1:
     y18n "^5.0.5"
     yargs-parser "^21.0.0"
 
-yosys@^0.14.0:
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.14.0.tgz#c08f2f4ec999ab3cd321b856a5fd47f7a0ce02b8"
-  integrity sha512-rIrJsRcWyqL8IVXkf8pL4V3Np0ZU4XyH3w1rcqKjhpfoHGYf/TF2wjzziwxDTu95kfwmcA7pc3YvbWLF+0+K4A==
+yosys@^0.15.0:
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.15.0.tgz#3eac33116b010fe1121943b65e3757004172820b"
+  integrity sha512-ioTqrAwiIojFNB2LIax3Lytqgy2g2Oy276HP9PjIyyM+QedSdLUrHMtMzqxgbsG7GiDbDIW6IOM3mj/s+4ykhA==
   dependencies:
-    "@types/emscripten" "^1.39.5"
-    "@types/node" "^16.11.1"
+    "@types/emscripten" "^1.39.6"
+    "@types/node" "^17.0.21"
 
 yup@^0.32.11:
   version "0.32.11"

@@ -22,7 +22,6 @@ export const ACTIONS: Action[][] = [
         name: 'New File',
         visible: (entry) => entry.getType() === StorageEntryType.DIRECTORY,
         executeDirectory(directory, dispatch) {
-            // TODO: add values generic type to openPopup
             dispatch(openPopup({
                 title: 'New File',
                 form: [{
@@ -41,7 +40,7 @@ export const ACTIONS: Action[][] = [
                 async onSubmit(values) {
                     const result = await dispatch(createStorageFile({
                         parent: directory,
-                        name: values.name as string
+                        name: values.name
                     }));
                     handleResult(dispatch, result);
                 }
@@ -69,7 +68,7 @@ export const ACTIONS: Action[][] = [
                 async onSubmit(values) {
                     const result = await dispatch(createStorageDirectory({
                         parent: directory,
-                        name: values.name as string
+                        name: values.name
                     }));
                     handleResult(dispatch, result);
                 }

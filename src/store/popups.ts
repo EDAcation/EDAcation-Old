@@ -19,7 +19,7 @@ export interface Popup {
         label: string;
         type?: DialogButtonProps['type'] | 'close';
     }[];
-    onSubmit?: (values: Record<string, unknown>) => Promise<void>;
+    onSubmit?: (values: Record<string, string>) => Promise<void>;
 }
 
 export type PopupsState = Popup[];

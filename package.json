@@ -51,7 +51,7 @@
         "redux-persist": "^6.0.0",
         "styled-components": "^5.3.3",
         "uuid": "^8.3.2",
-        "yosys": "^0.14.0",
+        "yosys": "^0.15.0",
         "yup": "^0.32.11"
     },
     "devDependencies": {
