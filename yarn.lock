@@ -1005,7 +1005,7 @@
     "@types/d3-interpolate" "^1"
     "@types/d3-selection" "^1"
 
-"@types/emscripten@^1.39.6":
+"@types/emscripten@^1.39.5", "@types/emscripten@^1.39.6":
   version "1.39.6"
   resolved "https://registry.yarnpkg.com/@types/emscripten/-/emscripten-1.39.6.tgz#698b90fe60d44acf93c31064218fbea93fbfd85a"
   integrity sha512-H90aoynNhhkQP6DRweEjJp5vfUVdIj7tdPLsu7pq89vODD/lcugKfZOsfgwpvM6XUewEp2N5dCg1Uf3Qe55Dcg==
@@ -1037,6 +1037,11 @@
   version "17.0.21"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.21.tgz#864b987c0c68d07b4345845c3e63b75edd143644"
   integrity sha512-DBZCJbhII3r90XbQxI8Y9IjjiiOGlZ0Hr32omXIZvwwZ7p4DMMXGrKXVyPfuoBOri9XNtL0UK69jYIBIsRX3QQ==
+
+"@types/node@^17.0.22":
+  version "17.0.22"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.22.tgz#38b6c4b9b2f3ed9f2e376cce42a298fb2375251e"
+  integrity sha512-8FwbVoG4fy+ykY86XCAclKZDORttqE5/s7dyWZKLXTdv3vRy5HozBEinG5IqhvPXXzIZEcTVbuHlQEI6iuwcmw==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -2930,6 +2935,14 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
+nextpnr@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/nextpnr/-/nextpnr-0.2.1.tgz#a6d591fedec255e3403ab2cd3d4b6bce8b121761"
+  integrity sha512-3xvcVugy5O4ooFZvC+y/BHDZs5FXAzHbckZG4v0cYkvIc3B8HqnfKEA0oUKOHFvZ4OSG6Yo/CMeTiD8nQVl+AQ==
+  dependencies:
+    "@types/emscripten" "^1.39.5"
+    "@types/node" "^17.0.22"
+
 node-addon-api@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
@@ -4051,10 +4064,10 @@ yargs@^17.3.1:
     y18n "^5.0.5"
     yargs-parser "^21.0.0"
 
-yosys@^0.15.0:
-  version "0.15.0"
-  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.15.0.tgz#3eac33116b010fe1121943b65e3757004172820b"
-  integrity sha512-ioTqrAwiIojFNB2LIax3Lytqgy2g2Oy276HP9PjIyyM+QedSdLUrHMtMzqxgbsG7GiDbDIW6IOM3mj/s+4ykhA==
+yosys@^0.15.1:
+  version "0.15.1"
+  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.15.1.tgz#f66da269af1a1647835fba4747db2bc0e3c5b715"
+  integrity sha512-iWh8QPHQRK+88ZboF/7d5rgPfX7z7uE6FBruS6SMm21/Sc5NqsyE1pr7OL85rN6iI7muospPwmJ/o63b61FHHg==
   dependencies:
     "@types/emscripten" "^1.39.6"
     "@types/node" "^17.0.21"

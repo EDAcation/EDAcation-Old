@@ -5,6 +5,7 @@ import {useAppDispatch} from '../../store';
 import {saveFile, changeFile, EditorFile, EditorFileLoaded} from '../../store/files';
 
 import {EditorButtonYosys} from './buttons/EditorButtonYosys';
+import {EditorButtonNextpnr} from './buttons/EditorButtonNextpnr';
 import {BaseEditorProps} from './BaseEditor';
 import {EditorGraphviz} from './EditorGraphviz';
 import {EditorMonaco} from './EditorMonoca';
@@ -74,6 +75,7 @@ export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) =
 
             <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
                 {extension === 'v' && <EditorButtonYosys panelId={panelId} file={loadedFile} />}
+                {extension === 'v' && <EditorButtonNextpnr panelId={panelId} file={loadedFile} />}
             </Box>
         </>
     );
