@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: yarn run build
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: react-build
           path: dist
@@ -34,13 +34,16 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        ref: gh-pages
+      - name: Track certain files in Git LFS
+        run: git lfs track "*.wasm"
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: react-build
           path: dist
-      - name: Track certain files in Git LFS
-        run: git lfs track "*.wasm"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
