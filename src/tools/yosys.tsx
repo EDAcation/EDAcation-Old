@@ -1,18 +1,22 @@
-import fs from 'fs';
-import path from 'path';
-
 import {Yosys} from 'yosys';
 
 import {EditorFileLoaded} from '../store/files';
 
+// @ts-expect-error: Parcel's import object only exists when TypeScript modules are
+const WASM_URL = new URL('../../node_modules/yosys/dist/yosys.wasm', import.meta.url);
+
 let yosys: Yosys | null = null;
 
 export const initialize = async () => {
-    return await Yosys.initialize({
-        wasmBinary: fs.readFileSync(path.join(__dirname, '..', '..', 'node_modules', 'yosys', 'dist', 'yosys.wasm')),
+    const response = await fetch(WASM_URL.toString());
+    const wasmBinary = await response.arrayBuffer();
+
+    yosys = await Yosys.initialize({
+        wasmBinary,
         print: (text) => console.log(text),
         printErr: (text) => console.log(text)
     });
+    return yosys;
 };
 
 export const synthesize = async (file: EditorFileLoaded) => {

@@ -1,23 +1,22 @@
-import fs from 'fs';
-import path from 'path';
-
 import {Nextpnr} from 'nextpnr';
 
 import {EditorFileLoaded} from '../store/files';
 
-let nextpnr: Nextpnr | null = null;
-
+// @ts-expect-error: Parcel's import object only exists when TypeScript modules are
 const WASM_URL = new URL('../../node_modules/nextpnr/dist/nextpnr-ice40.wasm', import.meta.url);
 
+let nextpnr: Nextpnr | null = null;
+
 export const initialize = async () => {
-    const response = await fetch(WASM_URL);
+    const response = await fetch(WASM_URL.toString());
     const wasmBinary = await response.arrayBuffer();
 
-    return await Nextpnr.initialize({
+    nextpnr = await Nextpnr.initialize({
         wasmBinary,
         print: (text) => console.log(text),
         printErr: (text) => console.log(text)
     });
+    return nextpnr;
 };
 
 export const placeAndRoute = async (file: EditorFileLoaded) => {
