@@ -39,6 +39,8 @@ jobs:
         with:
           name: react-build
           path: dist
+      - name: Track certain files in Git LFS
+        run: git lfs track "*.wasm"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
