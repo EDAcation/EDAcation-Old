@@ -9,9 +9,11 @@ import {EditorButtonNextpnr} from './buttons/EditorButtonNextpnr';
 import {BaseEditorProps} from './BaseEditor';
 import {EditorGraphviz} from './EditorGraphviz';
 import {EditorMonaco} from './EditorMonoca';
+import {EditorDigitalJS} from './EditorDigitalJS';
 
 const EDITORS_BY_EXTENSION: Record<string, React.FC<BaseEditorProps>> = {
-    dot: EditorGraphviz
+    dot: EditorGraphviz,
+    json: EditorDigitalJS
 };
 
 export interface EditorProps {
