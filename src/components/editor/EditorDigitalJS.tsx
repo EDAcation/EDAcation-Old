@@ -21,6 +21,8 @@ export const EditorDigitalJS: React.FC<EditorDigitalJSProps> = ({panelId, file})
             console.log(circuit);
             const paper = circuit.displayOn(ref.current);
             console.log(paper);
+
+            setError(null);
         } catch (err) {
             console.error(err);
 

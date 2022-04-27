@@ -24,10 +24,18 @@ export const placeAndRoute = async (file: EditorFileLoaded) => {
         nextpnr = await initialize();
     }
 
-    // @ts-expect-error: callMain does not exist on type
-    nextpnr.getModule().callMain(['nextpnr']);
+    nextpnr.getFS().writeFile('luts.json', file.content);
 
-    // TODO: write this function for nextpnr
+    // @ts-expect-error: callMain does not exist on type
+    nextpnr.getModule().callMain([
+        'nextpnr-ice40',
+        '--lp384',
+        '--json', 'design.json',
+        '--package', 'qn32',
+        '--write', 'routed.json',
+        '--placed-svg', 'placed.svg',
+        '--routed-svg', 'routed.svg'
+    ]);
 
     // const extension = file.file.getExtension();
 
@@ -44,7 +52,7 @@ export const placeAndRoute = async (file: EditorFileLoaded) => {
 
     // nextpnr.getModule().ccall('run', '', ['string'], ['script design.ys']);
 
-    // return nextpnr.getFS().readFile('show.dot', {
-    //     encoding: 'utf8'
-    // });
+    return nextpnr.getFS().readFile('routed.svg', {
+        encoding: 'utf8'
+    });
 };

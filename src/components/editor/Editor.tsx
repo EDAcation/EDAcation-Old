@@ -77,7 +77,7 @@ export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) =
 
             <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
                 {extension === 'v' && <EditorButtonYosys panelId={panelId} file={loadedFile} />}
-                {extension === 'v' && <EditorButtonNextpnr panelId={panelId} file={loadedFile} />}
+                {extension === 'json' && <EditorButtonNextpnr panelId={panelId} file={loadedFile} />}
             </Box>
         </>
     );
