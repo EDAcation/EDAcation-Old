@@ -1,4 +1,4 @@
-import {EditorFileLoaded} from '../../store/files';
+import {EditorFileLoaded} from '../../../store/files';
 
 export interface BaseEditorProps {
     panelId: string;

@@ -1,8 +1,8 @@
 import React, {useCallback} from 'react';
 import MonacoEditor, {loader, OnMount} from '@monaco-editor/react';
 
-import {useAppSelector} from '../../store';
-import {EditorFileLoaded} from '../../store/files';
+import {useAppSelector} from '../../../store';
+import {EditorFileLoaded} from '../../../store/files';
 
 import {BaseEditorProps} from './BaseEditor';
 

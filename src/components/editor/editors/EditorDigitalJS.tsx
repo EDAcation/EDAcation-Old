@@ -9,34 +9,40 @@ export type EditorDigitalJSProps = BaseEditorProps;
 export const EditorDigitalJS: React.FC<EditorDigitalJSProps> = ({panelId, file}) => {
     const ref = useRef<HTMLDivElement>(null);
     const [error, setError] = useState<Error | null>(null);
-    let circuit: Circuit;
+    const [circuit, setCircuit] = useState<Circuit | null>(null);
 
     useEffect(() => {
+        setError(null);
+        setCircuit(null);
+
         try {
             const json = JSON.parse(file.content);
-            console.log(json);
             const digitalJs = yosys2digitaljs(json);
-            console.log(digitalJs);
-            circuit = new Circuit(digitalJs);
-            console.log(circuit);
-            const paper = circuit.displayOn(ref.current);
-            console.log(paper);
+            const circuit = new Circuit(digitalJs);
+            circuit.displayOn(ref.current);
 
-            setError(null);
+            setCircuit(circuit);
         } catch (err) {
             console.error(err);
 
             if (err instanceof Error) {
                 setError(err);
+            } else {
+                setError(new Error('Unknown error.'));
             }
         }
     }, [panelId, file.id, file.content]);
 
     return (
         <>
-            <button onClick={() => circuit?.start()}>Start</button>
-            <button onClick={() => circuit?.stop()}>Stop</button>
-            <button onClick={() => circuit?.updateGates()}>Step</button>
+            {circuit && (
+                <>
+                    <button onClick={() => circuit.start()}>Start</button>
+                    <button onClick={() => circuit.stop()}>Stop</button>
+                    <button onClick={() => circuit.updateGates()}>Step</button>
+                </>
+            )}
+
             <div id={`digitaljs-${panelId}-${file.id}`} ref={ref} />
 
             {error && (

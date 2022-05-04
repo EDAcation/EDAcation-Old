@@ -9,13 +9,13 @@ import {Tabs} from '../tabs/Tabs';
 import {BasePanelProps} from './BasePanel';
 
 export const PanelEditor: React.FC<BasePanelProps<PanelEditorType>> = ({panel}) => {
-    const files = useAppSelector((state) => selectFilesById(state, panel.fileIds));
+    const files = useAppSelector((state) => selectFilesById(state, panel.files.map((file) => file.id)));
 
     return (
         <>
             <Tabs panelId={panel.id} files={files} currentFileId={panel.currentFileId} />
 
-            <Editor panelId={panel.id} files={files} currentFileId={panel.currentFileId} />
+            <Editor panelId={panel.id} files={files} fileInfos={panel.files} currentFileId={panel.currentFileId} />
         </>
     );
 };

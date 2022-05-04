@@ -22,9 +22,14 @@ export interface PanelSplit extends BasePanel {
     children: Panel[];
 }
 
+export interface PanelEditorFile {
+    id: string;
+    editorId?: string;
+}
+
 export interface PanelEditor extends BasePanel {
     type: PanelType.EDITOR;
-    fileIds: string[];
+    files: PanelEditorFile[];
     currentFileId: string;
 }
 
@@ -77,7 +82,7 @@ export const findPanelByType = (panel: Panel, type: PanelType): Panel | null => 
 };
 
 export const findPanelByFileId = (panel: Panel, fileId: string, panelId?: string): PanelEditor | null => {
-    if (panel.type === PanelType.EDITOR && panel.fileIds.includes(fileId)) {
+    if (panel.type === PanelType.EDITOR && panel.files.some((f) => f.id === fileId)) {
         if (!panelId || panel.id === panelId) {
             return panel;
         }
@@ -218,16 +223,30 @@ export const panelsSlice = createSlice({
         closeFile(state, action: PayloadAction<{fileId: string; panelId?: string}>) {
             const panel = findPanelByFileId(state, action.payload.fileId, action.payload.panelId);
             if (panel) {
-                const index = panel.fileIds.indexOf(action.payload.fileId);
-                panel.fileIds.splice(index, 1);
+                const index = panel.files.findIndex((f) => f.id === action.payload.fileId);
+                panel.files.splice(index, 1);
 
-                if (panel.fileIds.length === 0) {
+                if (panel.files.length === 0) {
                     closePanel(state, panel);
                 } else if (panel.currentFileId === action.payload.fileId) {
-                    panel.currentFileId = panel.fileIds[Math.min(Math.max(0, index - 1), panel.fileIds.length - 1)];
+                    panel.currentFileId = panel.files[Math.min(Math.max(0, index - 1), panel.files.length - 1)].id;
                 }
             } else {
-                console.warn(`Unable to view file "${action.payload.fileId}"`);
+                console.warn(`Unable to close file "${action.payload.fileId}"`);
+            }
+        },
+
+        changeFileEditor(state, action: PayloadAction<{fileId: string; panelId?: string; editorId: string}>) {
+            const panel = findPanelByFileId(state, action.payload.fileId, action.payload.panelId);
+            if (panel) {
+                const file = panel.files.find((f) => f.id === action.payload.fileId);
+                if (file) {
+                    file.editorId = action.payload.editorId;
+                } else {
+                    console.warn(`Unable to change file "${action.payload.fileId}"`);
+                }
+            } else {
+                console.warn(`Unable to change file "${action.payload.fileId}"`);
             }
         }
     },
@@ -252,8 +271,10 @@ export const panelsSlice = createSlice({
             if (panel) {
                 const panelEditor = panel as PanelEditor;
 
-                if (!panelEditor.fileIds.includes(action.payload.fileId)) {
-                    panelEditor.fileIds.push(action.payload.fileId);
+                if (!panelEditor.files.some((f) => f.id === action.payload.fileId)) {
+                    panelEditor.files.push({
+                        id: action.payload.fileId
+                    });
                 }
 
                 panelEditor.currentFileId = action.payload.fileId;
@@ -264,7 +285,9 @@ export const panelsSlice = createSlice({
                     parentId: panelSplit.id,
                     id: uuidv4(),
                     type: PanelType.EDITOR,
-                    fileIds: [action.payload.fileId],
+                    files: [{
+                        id: action.payload.fileId
+                    }],
                     currentFileId: action.payload.fileId
                 };
                 panelSplit.children.push(panelEditor);
@@ -273,4 +296,4 @@ export const panelsSlice = createSlice({
     }
 });
 
-export const {addPanel, removePanel, viewFile, closeFile} = panelsSlice.actions;
+export const {addPanel, removePanel, viewFile, closeFile, changeFileEditor} = panelsSlice.actions;

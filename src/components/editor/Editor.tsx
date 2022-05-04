@@ -3,26 +3,21 @@ import React, {useCallback} from 'react';
 
 import {useAppDispatch} from '../../store';
 import {saveFile, changeFile, EditorFile, EditorFileLoaded} from '../../store/files';
+import {changeFileEditor, PanelEditorFile} from '../../store/panels';
 
 import {EditorButtonYosys} from './buttons/EditorButtonYosys';
 import {EditorButtonNextpnr} from './buttons/EditorButtonNextpnr';
-import {BaseEditorProps} from './BaseEditor';
-import {EditorGraphviz} from './EditorGraphviz';
-import {EditorMonaco} from './EditorMonoca';
-import {EditorDigitalJS} from './EditorDigitalJS';
-
-const EDITORS_BY_EXTENSION: Record<string, React.FC<BaseEditorProps>> = {
-    dot: EditorGraphviz,
-    json: EditorDigitalJS
-};
+import {EditorDefinition, getEditors} from './editors';
+import {EditorMenu} from './EditorMenu';
 
 export interface EditorProps {
     panelId: string;
-    files: EditorFile[];
     currentFileId: string;
+    files: EditorFile[];
+    fileInfos: PanelEditorFile[];
 }
 
-export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) => {
+export const Editor: React.FC<EditorProps> = ({panelId, currentFileId, files, fileInfos}) => {
     const dispatch = useAppDispatch();
 
     const handleSave = useCallback(
@@ -44,9 +39,21 @@ export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) =
         [dispatch]
     );
 
-    const file = files.length > 0 ? files.find((file) => file.id === currentFileId) : null;
+    const handleEditorChange = useCallback(
+        (fileInfo: PanelEditorFile, editor: EditorDefinition) => {
+            dispatch(changeFileEditor({
+                panelId: panelId,
+                fileId: fileInfo.id,
+                editorId: editor.id
+            }));
+        },
+        [panelId, dispatch]
+    );
 
-    if (!file) {
+    const file = files.length > 0 ? files.find((file) => file.id === currentFileId) : null;
+    const fileInfo = fileInfos.length > 0 ? fileInfos.find((file) => file.id === currentFileId) : null;
+
+    if (!file || !fileInfo) {
         return <></>;
     }
 
@@ -69,13 +76,24 @@ export const Editor: React.FC<EditorProps> = ({panelId, files, currentFileId}) =
     const loadedFile = file as EditorFileLoaded;
     const extension = loadedFile.file.getExtension();
 
-    const EditorType = EDITORS_BY_EXTENSION[extension] || EditorMonaco;
+    // TODO: integrate editor buttons into this constructions
+    const editors = getEditors(loadedFile);
+    const editor = editors.find((editor) => editor.id === fileInfo.editorId) || editors[0] || editors.find((editor) => editor.isDefault) as EditorDefinition;
+    const EditorComponent = editor && editor.component;
 
     return (
         <>
-            <EditorType panelId={panelId} file={loadedFile} value={loadedFile.content} onChange={handleChange} onSave={handleSave} />
+            {EditorComponent ? (
+                <EditorComponent panelId={panelId} file={loadedFile} value={loadedFile.content} onChange={handleChange} onSave={handleSave} />
+            ) : (
+                <div>
+                    No editors found.
+                </div>
+            )}
 
             <Box sx={{position: 'absolute', width: '100%', bottom: '0px', p: '2'}}>
+                <EditorMenu editors={editors} selectedEditor={editor} fileInfo={fileInfo} onChange={handleEditorChange} />
+
                 {extension === 'v' && <EditorButtonYosys panelId={panelId} file={loadedFile} />}
                 {extension === 'json' && <EditorButtonNextpnr panelId={panelId} file={loadedFile} />}
             </Box>

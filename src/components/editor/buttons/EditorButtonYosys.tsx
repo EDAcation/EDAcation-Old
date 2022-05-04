@@ -24,18 +24,23 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
             parent: directory,
             name: file.file.getNameWithoutExtension()
         }));
-        const actionFile = await dispatch(createStorageFile({
-            parent: actionDirectory.payload as StorageDirectory<unknown, unknown>,
-            name: 'rtl.dot',
-            content: result
-        }));
 
-        dispatch(openFile({
-            file: actionFile.payload as StorageFile<unknown, unknown>,
-            existing: true,
-            split: true,
-            reload: true
-        }));
+        for (const resultFile of result) {
+            const actionFile = await dispatch(createStorageFile({
+                parent: actionDirectory.payload as StorageDirectory<unknown, unknown>,
+                name: resultFile.name,
+                content: resultFile.content
+            }));
+
+            if (resultFile.name === 'rtl.dot') {
+                dispatch(openFile({
+                    file: actionFile.payload as StorageFile<unknown, unknown>,
+                    existing: true,
+                    split: true,
+                    reload: true
+                }));
+            }
+        }
     };
 
     return (

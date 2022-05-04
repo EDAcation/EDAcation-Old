@@ -28,31 +28,28 @@ export const placeAndRoute = async (file: EditorFileLoaded) => {
 
     // @ts-expect-error: callMain does not exist on type
     nextpnr.getModule().callMain([
-        'nextpnr-ice40',
         '--lp384',
-        '--json', 'design.json',
+        '--json', 'luts.json',
         '--package', 'qn32',
         '--write', 'routed.json',
         '--placed-svg', 'placed.svg',
         '--routed-svg', 'routed.svg'
     ]);
 
-    // const extension = file.file.getExtension();
-
-    // nextpnr.getFS().writeFile(`design.${extension}`, file.content);
-
-    // nextpnr.getFS().writeFile(`design.ys`, `
-    //     design -reset;
-    //     design -reset-vlog;
-    //     read_verilog design.${extension};
-    //     proc;
-    //     opt;
-    //     show;
-    // `);
-
-    // nextpnr.getModule().ccall('run', '', ['string'], ['script design.ys']);
-
-    return nextpnr.getFS().readFile('routed.svg', {
-        encoding: 'utf8'
-    });
+    return [{
+        name: 'routed.json',
+        content: nextpnr.getFS().readFile('routed.json', {
+            encoding: 'utf8'
+        })
+    }, {
+        name: 'placed.svg',
+        content: nextpnr.getFS().readFile('placed.svg', {
+            encoding: 'utf8'
+        })
+    }, {
+        name: 'routed.svg',
+        content: nextpnr.getFS().readFile('routed.svg', {
+            encoding: 'utf8'
+        })
+    }];
 };

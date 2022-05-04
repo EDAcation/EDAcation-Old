@@ -35,12 +35,21 @@ export const synthesize = async (file: EditorFileLoaded) => {
         proc;
         opt;
         show;
+        synth_ice40 -json luts.json;
     `);
 
     // @ts-expect-error: ccall does not exist on type
     yosys.getModule().ccall('run', '', ['string'], ['script design.ys']);
 
-    return yosys.getFS().readFile('show.dot', {
-        encoding: 'utf8'
-    });
+    return [{
+        name: 'rtl.dot',
+        content: yosys.getFS().readFile('show.dot', {
+            encoding: 'utf8'
+        })
+    }, {
+        name: 'luts.json',
+        content: yosys.getFS().readFile('luts.json', {
+            encoding: 'utf8'
+        })
+    }];
 };
