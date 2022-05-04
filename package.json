@@ -52,7 +52,7 @@
         "redux-persist": "^6.0.0",
         "styled-components": "^5.3.5",
         "uuid": "^8.3.2",
-        "yosys": "^0.16.3",
+        "yosys": "^0.16.4",
         "yosys2digitaljs": "^0.6.0",
         "yup": "^0.32.11"
     },

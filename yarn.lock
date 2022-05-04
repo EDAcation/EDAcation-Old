@@ -4178,10 +4178,10 @@ yosys2digitaljs@^0.6.0:
     tmp-promise "^1.1.0"
     topsort "^0.0.2"
 
-yosys@^0.16.3:
-  version "0.16.3"
-  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.16.3.tgz#fcaf1db35c399beb35a412c061c6c359a264e466"
-  integrity sha512-DjhyiB5XdZLFGL6ZUX/Uxsh4vPWv7covhVBATeSCzyyDPCIL2gGpl/SrEI8u1SuFda2mfMhkPEMrf9rCTAFcCQ==
+yosys@^0.16.4:
+  version "0.16.4"
+  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.16.4.tgz#5fbc80d5a18c188a8db6cff82752efe2fb682f40"
+  integrity sha512-mJALCVreHCq+XHbJ4aQi/rTJXEblkbZvy9GCN7WkROMKx3Q9JmsahDUOOgdhAUGGGFQPD+VD117c4P5WUogkaA==
   dependencies:
     "@types/emscripten" "^1.39.6"
     "@types/node" "^17.0.22"
