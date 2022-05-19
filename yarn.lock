@@ -3138,10 +3138,10 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-nextpnr@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/nextpnr/-/nextpnr-0.3.1.tgz#46669e7aad74b6591b307578bd170afc4ed81a6e"
-  integrity sha512-zbScFadQm/NEUYod2bxm0hfTKxA4LfMc8aLzEU9xC5EETqsNVoksM6EH7WecRBA9zrvwy3GJyxICjdbRGgbLdw==
+nextpnr@^0.3.2:
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/nextpnr/-/nextpnr-0.3.2.tgz#f838b00b923458579ff674a072f9aa5c4f98783c"
+  integrity sha512-YUdXg73hti5+1eag1m9oGxkdwxksft3ks3ci65oD4CxLwVCQ2eOSKnZVNvM/8guQY9YC3B3LxCT5VWZoVodSuQ==
   dependencies:
     "@types/emscripten" "^1.39.5"
     "@types/node" "^17.0.22"
