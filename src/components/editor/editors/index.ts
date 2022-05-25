@@ -6,6 +6,7 @@ import {BaseEditorProps} from './BaseEditor';
 import {EditorGraphviz} from './EditorGraphviz';
 import {EditorDigitalJS} from './EditorDigitalJS';
 import {EditorMonaco} from './EditorMonoca';
+import {EditorSVG} from './EditorSVG';
 
 export interface EditorDefinition {
     id: string;
@@ -21,6 +22,11 @@ export const EDITORS: EditorDefinition[] = [{
     name: 'Graphviz',
     component: EditorGraphviz,
     extensions: ['dot']
+}, {
+    id: 'svg',
+    name: 'SVG',
+    component: EditorSVG,
+    extensions: ['svg']
 }, {
     id: 'digitaljs',
     name: 'DigitalJS simulator',
