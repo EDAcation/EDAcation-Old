@@ -3138,10 +3138,10 @@ natural-compare@^1.4.0:
   resolved "https://registry.yarnpkg.com/natural-compare/-/natural-compare-1.4.0.tgz#4abebfeed7541f2c27acfb29bdbbd15c8d5ba4f7"
   integrity sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
 
-nextpnr@^0.3.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/nextpnr/-/nextpnr-0.3.3.tgz#a0aea4e33b69768966313926f6e21609808343ad"
-  integrity sha512-Lz/jUruQVlAZjWj2HoDRME1T3sOhX5NaPCg86vOjJWBjUguSi1XbtI0UsVzSX5fTCbJSMjuBX7cMFx+1H7rA8A==
+nextpnr@^0.3.4:
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/nextpnr/-/nextpnr-0.3.4.tgz#ca84125c04190c2abb1e4c3d6e7f8aaa097f261d"
+  integrity sha512-0TYubf35M77ke1Vq5w60ThgOxqkYY5s40OgnN6MtYUwoWLp+0W9Hhs1nrHbBGZFvb65/iYDkRi+O2r8+tCfRdw==
   dependencies:
     "@types/emscripten" "^1.39.5"
     "@types/node" "^17.0.22"
@@ -4178,10 +4178,10 @@ yosys2digitaljs@^0.6.0:
     tmp-promise "^1.1.0"
     topsort "^0.0.2"
 
-yosys@^0.17.1:
-  version "0.17.1"
-  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.17.1.tgz#3101ea9d831216f0918d4d135e71c3d13d854c19"
-  integrity sha512-TSVtnn0mdvz75V8irscXHFRnDvc8qNuNLJVz2G9fqYRNGkAccZo0FNhZGCxk7+pilHgrRISuEebo6pVWStYleQ==
+yosys@^0.17.3:
+  version "0.17.3"
+  resolved "https://registry.yarnpkg.com/yosys/-/yosys-0.17.3.tgz#2b13e6c85baf61c25ef2a38e34aa7b0903402756"
+  integrity sha512-5z9Oj6SdjlRZjVA4MXXha+SbTogyDgE5WUm5qmVDdgOoKwr6AiKQKvg6Xl368aiNiRnrfLmVZaR63tIDd/nUzw==
   dependencies:
     "@types/emscripten" "^1.39.6"
     "@types/node" "^17.0.22"

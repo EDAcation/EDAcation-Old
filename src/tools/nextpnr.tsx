@@ -2,13 +2,11 @@ import {Nextpnr} from 'nextpnr';
 
 import {EditorFileLoaded} from '../store/files';
 
-// @ts-expect-error: Parcel's import object only exists when TypeScript modules are
-const WASM_URL = new URL('../../node_modules/nextpnr/dist/nextpnr-ice40.wasm', import.meta.url);
-
 let nextpnr: Nextpnr | null = null;
 
 export const initialize = async () => {
-    const response = await fetch(WASM_URL.toString());
+    // TODO: cache this using service worker or IndexedDB?
+    const response = await fetch(`https://unpkg.com/nextpnr@${Nextpnr.getVersion()}/dist/nextpnr-ice40.wasm`);
     const wasmBinary = await response.arrayBuffer();
 
     nextpnr = await Nextpnr.initialize({

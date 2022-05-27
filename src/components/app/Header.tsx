@@ -7,7 +7,9 @@ export const Header = () => {
     return (
         <header>
             <PrimerHeader style={{height: '3rem'}}>
-                <PrimerHeader.Item full>EDAcation</PrimerHeader.Item>
+                <PrimerHeader.Item>EDAcation</PrimerHeader.Item>
+
+                <PrimerHeader.Item full />
 
                 <PrimerHeader.Item>
                     <ThemeButton />

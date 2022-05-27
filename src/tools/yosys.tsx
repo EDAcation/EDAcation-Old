@@ -2,13 +2,11 @@ import {Yosys} from 'yosys';
 
 import {EditorFileLoaded} from '../store/files';
 
-// @ts-expect-error: Parcel's import object only exists when TypeScript modules are
-const WASM_URL = new URL('../../node_modules/yosys/dist/yosys.wasm', import.meta.url);
-
 let yosys: Yosys | null = null;
 
 export const initialize = async () => {
-    const response = await fetch(WASM_URL.toString());
+    // TODO: cache this using service worker or IndexedDB?
+    const response = await fetch(`https://unpkg.com/yosys@${Yosys.getVersion()}/dist/yosys.wasm`);
     const wasmBinary = await response.arrayBuffer();
 
     yosys = await Yosys.initialize({
