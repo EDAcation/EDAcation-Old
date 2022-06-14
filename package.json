@@ -20,7 +20,7 @@
         "lint": "eslint src",
         "clean": "rimraf dist",
         "build": "yarn run clean && yarn run lint && yarn run build:parcel",
-        "build:parcel": "parcel build public/index.html --public-url . --no-source-maps --no-minify",
+        "build:parcel": "parcel build public/index.html --public-url . --no-source-maps --no-optimize",
         "dev": "parcel public/index.html"
     },
     "dependencies": {
