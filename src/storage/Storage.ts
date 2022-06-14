@@ -229,8 +229,8 @@ export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends Se
                 continue;
             }
 
-            return entry as StorageFile<unknown, unknown, Serialized>;
+            return entry;
         }
-        throw new Error('Unreachable code.');
+        return current;
     }
 }
