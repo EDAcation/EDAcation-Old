@@ -1,6 +1,27 @@
 import {Yosys} from 'yosys';
 
-import {EditorFileLoaded} from '../store/files';
+import {deserializeState} from '../serializable';
+import {SerializedStorage, Storage, StorageFile} from '../storage';
+
+// NOTE: hack to ensure storage is imported as values and not just as types
+console.log(Storage);
+
+addEventListener('message', async (event: MessageEvent<{id: string; storage: SerializedStorage; path: string[]}>) => {
+    console.log(event);
+
+    const storage = deserializeState<Storage<unknown, unknown>>(event.data.storage);
+
+    console.log(storage);
+
+    const file = await storage.getEntry(event.data.path);
+
+    const result = await synthesize(file);
+
+    postMessage({
+        id: event.data.id,
+        result
+    });
+});
 
 let yosys: Yosys | null = null;
 
@@ -14,17 +35,23 @@ export const initialize = async () => {
         print: (text) => console.log(text),
         printErr: (text) => console.log(text)
     });
+
+    console.log('Yosys is initialized.');
+
     return yosys;
 };
 
-export const synthesize = async (file: EditorFileLoaded) => {
+export const synthesize = async (file: StorageFile<unknown, unknown>) => {
     if (!yosys) {
         yosys = await initialize();
     }
 
-    const extension = file.file.getExtension();
+    const extension = file.getExtension();
+    const content = await file.read();
 
-    yosys.getFS().writeFile(`design.${extension}`, file.content);
+    // TODO: use actual file names (required for future multi file settings)
+
+    yosys.getFS().writeFile(`design.${extension}`, content);
 
     yosys.getFS().writeFile(`design.ys`, `
         design -reset;
@@ -39,6 +66,8 @@ export const synthesize = async (file: EditorFileLoaded) => {
     // @ts-expect-error: ccall does not exist on type
     yosys.getModule().ccall('run', '', ['string'], ['script design.ys']);
 
+    // TODO: consider writing back to FS here instead of in main thread
+
     return [{
         name: 'rtl.dot',
         content: yosys.getFS().readFile('show.dot', {
@@ -51,3 +80,5 @@ export const synthesize = async (file: EditorFileLoaded) => {
         })
     }];
 };
+
+initialize();

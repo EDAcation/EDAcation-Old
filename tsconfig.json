@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "es2018",
-        "lib": ["esnext", "dom"],
+        "lib": ["esnext", "dom", "webworker"],
         "module": "commonjs",
         "moduleResolution": "node",
         "jsx": "react",

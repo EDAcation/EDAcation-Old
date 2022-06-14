@@ -43,7 +43,7 @@ export const serializeState = <State>(state: State): any => {
     }
 };
 
-export const deserializeState = <State>(data: any, partialState: State): State => {
+export const deserializeState = <State>(data: any, partialState?: State): State => {
     if (Array.isArray(data)) {
         return data.map((value) => deserializeState(value, partialState)) as any;
     } else if (typeof data === 'object' && data !== null) {
