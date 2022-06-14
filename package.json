@@ -20,7 +20,7 @@
         "lint": "eslint src",
         "clean": "rimraf dist",
         "build": "yarn run clean && yarn run lint && yarn run build:parcel",
-        "build:parcel": "parcel build public/index.html --public-url . --no-source-maps",
+        "build:parcel": "parcel build public/index.html --public-url . --no-source-maps --no-minify",
         "dev": "parcel public/index.html"
     },
     "dependencies": {
@@ -68,7 +68,7 @@
         "eslint-plugin-react-hooks": "^4.5.0",
         "events": "^3.3.0",
         "os-browserify": "^0.3.0",
-        "parcel": "^2.6.0",
+        "parcel": "2.5.0",
         "path-browserify": "^1.0.1",
         "process": "^0.11.10",
         "rimraf": "^3.0.2",
