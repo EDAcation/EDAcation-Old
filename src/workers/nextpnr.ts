@@ -2,6 +2,8 @@ import {Nextpnr} from 'nextpnr';
 
 import {StorageFile} from '../storage';
 
+// TODO: copy more code from Yosys worker
+
 let nextpnr: Nextpnr | null = null;
 
 export const initialize = async () => {

@@ -127,8 +127,6 @@ export const createStorageFS = (FS) => {
             readdir(node) {
                 debug('readdir', node);
 
-
-
                 throw new Error('Not implemented.');
             },
             symlink(parent, newName, oldPath) {

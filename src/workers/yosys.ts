@@ -2,12 +2,9 @@ import {Yosys} from 'yosys';
 
 import {deserializeState} from '../serializable';
 import {SerializedStorage, Storage, StorageFile} from '../storage';
-import {createStorageFS} from '../tools/fs';
 
+import {createStorageFS} from './common/emscripten-fs';
 import {Data} from './common/data';
-
-// NOTE: hack to ensure storage is imported as values and not just as types
-console.log(Storage);
 
 interface MessageInit {
     type: 'init';
