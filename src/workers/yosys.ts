@@ -4,6 +4,8 @@ import {deserializeState} from '../serializable';
 import {SerializedStorage, Storage, StorageFile} from '../storage';
 import {createStorageFS} from '../tools/fs';
 
+import {Data} from './common/data';
+
 // NOTE: hack to ensure storage is imported as values and not just as types
 console.log(Storage);
 
@@ -82,8 +84,10 @@ addEventListener('message', async (event: MessageEvent<Message>) => {
 
             console.log('done waiting');
 
-            const decoder = new TextDecoder();
-            console.log('received text', decoder.decode(state.arrayUint8.slice(8)));
+            const data = new Data(state.sharedBuffer, 8);
+            const array = data.readStringArray();
+
+            console.log('received', array);
 
             console.log('end of test');
 

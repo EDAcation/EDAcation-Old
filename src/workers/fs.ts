@@ -1,6 +1,8 @@
 import {deserializeState} from '../serializable';
 import {SerializedStorage, Storage, StorageDirectory} from '../storage';
 
+import {Data} from './common/data';
+
 interface MessageInit {
     type: 'init';
     sharedBuffer: SharedArrayBuffer;
@@ -92,13 +94,11 @@ const handleMessage = async (event: MessageEvent<Message>) => {
                 result.push(entry.getName());
             }
             console.log(result);
-            // TODO: send back
 
-            const encoder = new TextEncoder();
-            const data = encoder.encode(result.join(',').slice(0, 100));
-            console.log(data);
-            state.arrayUint8.set(data, 8);
-            console.log(state.arrayUint8.slice(8, 16));
+            const data = new Data(state.sharedBuffer, 8);
+            data.writeStringArray(result);
+
+            console.log(state.arrayUint8.slice(8, 8 + data.getOffset()));
 
             Atomics.store(state.arrayInt32, 1, jobId);
             Atomics.notify(state.arrayInt32, 1);
