@@ -1,202 +1,105 @@
 import {Yosys} from 'yosys';
 
-import {deserializeState} from '../serializable';
-import {SerializedStorage, Storage, StorageFile} from '../storage';
+import {Storage, StorageFile} from '../storage';
 
 import {createStorageFS} from './common/emscripten-fs';
-import {Data} from './common/data';
+import {ToolResult, WorkerTool} from './common/tool';
 
-interface MessageInit {
-    type: 'init';
-    sharedBuffer: SharedArrayBuffer;
-    portFs: MessagePort;
-}
+export class WorkerYosys extends WorkerTool<Yosys> {
 
-interface MessageSynthesize {
-    type: 'synthesize';
-    id: string;
-    storage: SerializedStorage;
-    path: string[];
-}
+    STORAGE_FS: ReturnType<typeof createStorageFS> | null = null;
 
-type Message = MessageInit | MessageSynthesize;
+    async initialize() {
+        // TODO: cache this using service worker or IndexedDB?
+        const response = await fetch(`https://unpkg.com/yosys@${Yosys.getVersion()}/dist/yosys.wasm`);
+        const wasmBinary = await response.arrayBuffer();
 
-interface State {
-    sharedBuffer: SharedArrayBuffer;
-    arrayUint8: Uint8Array;
-    arrayInt32: Int32Array;
-    portFs: MessagePort;
-}
+        const yosys = await Yosys.initialize({
+            wasmBinary,
+            print: (text) => console.log(text),
+            printErr: (text) => console.log(text)
+        });
 
-let state: State;
+        // // Initialize file system
+        this.STORAGE_FS = createStorageFS(yosys.getFS());
+        // @ts-expect-error: FS.filesystems does not exist in typing
+        yosys.getFS().filesystems.STORAGE_FS = STORAGE_FS;
+        yosys.getFS().mkdir('/storages');
+        // yosys.getFS().mount(STORAGE_FS, {}, '/storages');
 
-addEventListener('message', async (event: MessageEvent<Message>) => {
-    console.log(event);
+        console.log('Yosys is initialized.');
 
-    switch (event.data.type) {
-        case 'init': {
-            const {sharedBuffer, portFs} = event.data;
+        return yosys;
+    }
 
-            state = {
-                sharedBuffer,
-                arrayUint8: new Uint8Array(sharedBuffer),
-                arrayInt32: new Int32Array(sharedBuffer),
-                portFs
-            };
+    async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
+        // NOTE: call test code
+        await this.updateMount(file.getStorage());
 
-            break;
+        const extension = file.getExtension();
+        const content = await file.read();
+
+        // TODO: use actual file names (required for future multi file settings)
+
+        this.tool.getFS().writeFile(`design.${extension}`, content);
+
+        this.tool.getFS().writeFile(`design.ys`, `
+            design -reset;
+            design -reset-vlog;
+            read_verilog design.${extension};
+            proc;
+            opt;
+            show;
+            synth_ice40 -json luts.json;
+        `);
+
+        // @ts-expect-error: ccall does not exist on type
+        this.tool.getModule().ccall('run', '', ['string'], ['script design.ys']);
+
+        // TODO: consider writing back to FS here instead of in main thread
+
+        return [{
+            name: 'rtl.dot',
+            content: this.tool.getFS().readFile('show.dot', {
+                encoding: 'utf8'
+            })
+        }, {
+            name: 'luts.json',
+            content: this.tool.getFS().readFile('luts.json', {
+                encoding: 'utf8'
+            })
+        }];
+    }
+
+    async updateMount(storage: Storage<unknown, unknown>) {
+        // NOTE: this entire method is test code
+
+        if (!this.STORAGE_FS) {
+            throw new Error('Storage file system does not exist.');
         }
-        case 'synthesize': {
-            // TODO: reduce the amount of times storage is passed between workers
-            const storage = deserializeState<Storage<unknown, unknown>>(event.data.storage);
 
-            console.log(storage);
+        if (!await storage.hasPermission()) {
+            console.warn('No permission');
+            return;
+        }
 
-            const file = await storage.getEntry(event.data.path);
-            if (!(file instanceof StorageFile)) {
-                throw new Error('Storage entry is not a file.');
+        const fs = this.tool.getFS();
+        const path = `/storages/${storage.getID()}`;
+
+        try {
+            fs.lookupPath(path, {});
+        } catch (err) {
+            if (err instanceof Error && err.message === 'No such file or directory') {
+                fs.mkdir(path);
+                fs.mount(this.STORAGE_FS, {
+                    storage
+                }, path);
+                console.log(fs.readdir(`${path}/`));
+            } else {
+                throw err;
             }
-
-            state.portFs.postMessage({
-                type: 'storage',
-                storage: event.data.storage
-            });
-
-            console.log('start of test');
-
-            const jobId = Atomics.add(state.arrayInt32, 0, 1);
-
-            console.log('sending message to fs', jobId);
-
-            state.portFs.postMessage({
-                type: 'call',
-                jobId,
-                storageId: storage.getID(),
-                path: file.getParent().getPath()
-            });
-
-            console.log('waiting...');
-
-            Atomics.wait(state.arrayInt32, 1, jobId);
-
-            console.log('done waiting');
-
-            const data = new Data(state.sharedBuffer, 8);
-            const array = data.readStringArray();
-
-            console.log('received', array);
-
-            console.log('end of test');
-
-            const result = await synthesize(file);
-
-            postMessage({
-                id: event.data.id,
-                result
-            });
-
-            break;
         }
     }
-});
+}
 
-let yosys: Yosys | null = null;
-let STORAGE_FS: ReturnType<typeof createStorageFS> | null = null;
-
-export const initialize = async () => {
-    // TODO: cache this using service worker or IndexedDB?
-    const response = await fetch(`https://unpkg.com/yosys@${Yosys.getVersion()}/dist/yosys.wasm`);
-    const wasmBinary = await response.arrayBuffer();
-
-    yosys = await Yosys.initialize({
-        wasmBinary,
-        print: (text) => console.log(text),
-        printErr: (text) => console.log(text)
-    });
-
-    // // Initialize file system
-    STORAGE_FS = createStorageFS(yosys.getFS());
-    // @ts-expect-error: FS.filesystems does not exist in typing
-    yosys.getFS().filesystems.STORAGE_FS = STORAGE_FS;
-    yosys.getFS().mkdir('/storages');
-    // yosys.getFS().mount(STORAGE_FS, {}, '/storages');
-
-    console.log('Yosys is initialized.');
-
-    return yosys;
-};
-
-export const updateMount = async (storage: Storage<unknown, unknown>) => {
-    if (!yosys) {
-        yosys = await initialize();
-    }
-
-    if (!STORAGE_FS) {
-        throw new Error('Storage file system does not exist.');
-    }
-
-    if (!await storage.hasPermission()) {
-        console.warn('No permission');
-        return;
-    }
-
-    const path = `/storages/${storage.getID()}`;
-
-    try {
-        yosys.getFS().lookupPath(path, {});
-    } catch (err) {
-        if (err instanceof Error && err.message === 'No such file or directory') {
-            yosys.getFS().mkdir(path);
-            yosys.getFS().mount(STORAGE_FS, {
-                storage
-            }, path);
-            console.log(yosys.getFS().readdir(`${path}/`));
-        } else {
-            throw err;
-        }
-    }
-};
-
-export const synthesize = async (file: StorageFile<unknown, unknown>) => {
-    if (!yosys) {
-        yosys = await initialize();
-    }
-
-    await updateMount(file.getStorage());
-
-    const extension = file.getExtension();
-    const content = await file.read();
-
-    // TODO: use actual file names (required for future multi file settings)
-
-    yosys.getFS().writeFile(`design.${extension}`, content);
-
-    yosys.getFS().writeFile(`design.ys`, `
-        design -reset;
-        design -reset-vlog;
-        read_verilog design.${extension};
-        proc;
-        opt;
-        show;
-        synth_ice40 -json luts.json;
-    `);
-
-    // @ts-expect-error: ccall does not exist on type
-    yosys.getModule().ccall('run', '', ['string'], ['script design.ys']);
-
-    // TODO: consider writing back to FS here instead of in main thread
-
-    return [{
-        name: 'rtl.dot',
-        content: yosys.getFS().readFile('show.dot', {
-            encoding: 'utf8'
-        })
-    }, {
-        name: 'luts.json',
-        content: yosys.getFS().readFile('luts.json', {
-            encoding: 'utf8'
-        })
-    }];
-};
-
-initialize();
+new WorkerYosys();

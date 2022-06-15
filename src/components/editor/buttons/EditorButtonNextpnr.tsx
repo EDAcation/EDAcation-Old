@@ -5,7 +5,7 @@ import {StorageDirectory, StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
 import {openFile} from '../../../store/panels';
 import {createStorageDirectory, createStorageFile} from '../../../store/storage-entries';
-import {placeAndRoute} from '../../../tools/nextpnr';
+import {executeNextpnr} from '../../../tools';
 
 import {BaseEditorButtonProps} from './BaseEditorButton';
 
@@ -13,7 +13,7 @@ export const EditorButtonNextpnr: React.FC<BaseEditorButtonProps> = ({file}) => 
     const dispatch = useAppDispatch();
 
     const handleClick = async () => {
-        const result = await placeAndRoute(file);
+        const result = await executeNextpnr(file);
         console.log(file, result);
 
         const directory = file.file.getParent();

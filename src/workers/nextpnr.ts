@@ -2,57 +2,54 @@ import {Nextpnr} from 'nextpnr';
 
 import {StorageFile} from '../storage';
 
-// TODO: copy more code from Yosys worker
+import {ToolResult, WorkerTool} from './common/tool';
 
-let nextpnr: Nextpnr | null = null;
+class WorkerNextpnr extends WorkerTool<Nextpnr> {
 
-export const initialize = async () => {
-    // TODO: cache this using service worker or IndexedDB?
-    const response = await fetch(`https://unpkg.com/nextpnr@${Nextpnr.getVersion()}/dist/nextpnr-ice40.wasm`);
-    const wasmBinary = await response.arrayBuffer();
+    async initialize() {
+        // TODO: cache this using service worker or IndexedDB?
+        const response = await fetch(`https://unpkg.com/nextpnr@${Nextpnr.getVersion()}/dist/nextpnr-ice40.wasm`);
+        const wasmBinary = await response.arrayBuffer();
 
-    nextpnr = await Nextpnr.initialize({
-        wasmBinary,
-        print: (text) => console.log(text),
-        printErr: (text) => console.log(text)
-    });
-    return nextpnr;
-};
-
-export const placeAndRoute = async (file: StorageFile<unknown, unknown>) => {
-    if (!nextpnr) {
-        nextpnr = await initialize();
+        const nextpnr = await Nextpnr.initialize({
+            wasmBinary,
+            print: (text) => console.log(text),
+            printErr: (text) => console.log(text)
+        });
+        return nextpnr;
     }
 
-    const content = await file.read();
-    nextpnr.getFS().writeFile('luts.json', content);
+    async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
+        const content = await file.read();
+        this.tool.getFS().writeFile('luts.json', content);
 
-    // @ts-expect-error: callMain does not exist on type
-    nextpnr.getModule().callMain([
-        '--lp384',
-        '--json', 'luts.json',
-        '--package', 'qn32',
-        '--write', 'routed.json',
-        '--placed-svg', 'placed.svg',
-        '--routed-svg', 'routed.svg'
-    ]);
+        // @ts-expect-error: callMain does not exist on type
+        this.tool.getModule().callMain([
+            '--lp384',
+            '--json', 'luts.json',
+            '--package', 'qn32',
+            '--write', 'routed.json',
+            '--placed-svg', 'placed.svg',
+            '--routed-svg', 'routed.svg'
+        ]);
 
-    return [{
-        name: 'routed.json',
-        content: nextpnr.getFS().readFile('routed.json', {
-            encoding: 'utf8'
-        })
-    }, {
-        name: 'placed.svg',
-        content: nextpnr.getFS().readFile('placed.svg', {
-            encoding: 'utf8'
-        })
-    }, {
-        name: 'routed.svg',
-        content: nextpnr.getFS().readFile('routed.svg', {
-            encoding: 'utf8'
-        })
-    }];
-};
+        return [{
+            name: 'routed.json',
+            content: this.tool.getFS().readFile('routed.json', {
+                encoding: 'utf8'
+            })
+        }, {
+            name: 'placed.svg',
+            content: this.tool.getFS().readFile('placed.svg', {
+                encoding: 'utf8'
+            })
+        }, {
+            name: 'routed.svg',
+            content: this.tool.getFS().readFile('routed.svg', {
+                encoding: 'utf8'
+            })
+        }];
+    }
+}
 
-initialize();
+new WorkerNextpnr();

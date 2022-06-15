@@ -5,7 +5,7 @@ import {StorageDirectory, StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
 import {openFile} from '../../../store/panels';
 import {createStorageDirectory, createStorageFile} from '../../../store/storage-entries';
-import {synthesize} from '../../../tools/yosys';
+import {executeYosys} from '../../../tools';
 
 import {BaseEditorButtonProps} from './BaseEditorButton';
 
@@ -13,7 +13,7 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
     const dispatch = useAppDispatch();
 
     const handleClick = async () => {
-        const result = await synthesize(file);
+        const result = await executeYosys(file);
         console.log(file, result);
 
         const directory = file.file.getParent();
