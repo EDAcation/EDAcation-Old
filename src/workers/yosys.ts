@@ -23,9 +23,9 @@ export class WorkerYosys extends WorkerTool<Yosys> {
         // // Initialize file system
         this.STORAGE_FS = createStorageFS(yosys.getFS());
         // @ts-expect-error: FS.filesystems does not exist in typing
-        yosys.getFS().filesystems.STORAGE_FS = STORAGE_FS;
+        yosys.getFS().filesystems.STORAGE_FS = this.STORAGE_FS;
         yosys.getFS().mkdir('/storages');
-        // yosys.getFS().mount(STORAGE_FS, {}, '/storages');
+        // yosys.getFS().mount(this.STORAGE_FS, {}, '/storages');
 
         console.log('Yosys is initialized.');
 
@@ -34,7 +34,11 @@ export class WorkerYosys extends WorkerTool<Yosys> {
 
     async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
         // NOTE: call test code
-        await this.updateMount(file.getStorage());
+        try {
+            await this.updateMount(file.getStorage());
+        } catch (err) {
+            console.error(err);
+        }
 
         const extension = file.getExtension();
         const content = await file.read();

@@ -27,7 +27,6 @@ export interface ToolResult {
 export abstract class WorkerTool<Tool> {
 
     private sharedBuffer: SharedArrayBuffer;
-    private arrayUint8: Uint8Array;
     private arrayInt32: Int32Array;
     private portFs: MessagePort;
 
@@ -62,7 +61,6 @@ export abstract class WorkerTool<Tool> {
 
     async init(message: ToolMessageInit) {
         this.sharedBuffer = message.sharedBuffer;
-        this.arrayUint8 = new Uint8Array(this.sharedBuffer);
         this.arrayInt32 = new Int32Array(this.sharedBuffer);
         this.portFs = message.portFs;
     }
