@@ -16,6 +16,7 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
             print: (text) => console.log(text),
             printErr: (text) => console.log(text)
         });
+
         return nextpnr;
     }
 
@@ -52,4 +53,4 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
     }
 }
 
-new WorkerNextpnr();
+new WorkerNextpnr(2);

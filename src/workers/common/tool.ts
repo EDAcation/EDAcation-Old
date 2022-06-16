@@ -1,7 +1,14 @@
 import {deserializeState} from '../../serializable';
 import {SerializedStorage, Storage, StorageFile} from '../../storage';
 
+import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './constants';
 import {Data} from './data';
+import {createStorageFS} from './emscripten-fs';
+import {Mutex} from './mutex';
+
+export interface EmscriptenWrapper {
+    getFS(): typeof FS;
+}
 
 export interface ToolMessageInit {
     type: 'init';
@@ -9,14 +16,19 @@ export interface ToolMessageInit {
     portFs: MessagePort;
 }
 
+export interface ToolMessageStorage {
+    type: 'storage';
+    storage: SerializedStorage;
+}
+
 export interface ToolMessageCall {
     type: 'call';
     id: string;
-    storage: SerializedStorage;
+    storageId: string;
     path: string[];
 }
 
-export type ToolMessage = ToolMessageInit | ToolMessageCall;
+export type ToolMessage = ToolMessageInit | ToolMessageStorage | ToolMessageCall;
 
 // TODO: consider if this is needed
 export interface ToolResult {
@@ -24,16 +36,31 @@ export interface ToolResult {
     content: string;
 }
 
-export abstract class WorkerTool<Tool> {
+export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
+
+    private readonly id: number;
 
     private sharedBuffer: SharedArrayBuffer;
     private arrayInt32: Int32Array;
+    private lockFs: Mutex;
+    private lockWorker: Mutex;
+    private data: Data;
     private portFs: MessagePort;
 
     private toolPromise: Promise<void>;
     protected tool: Tool;
+    private fs: typeof FS;
+    private storageFs: Emscripten.FileSystemType;
 
-    constructor() {
+    private storages: Record<string, Storage<unknown, unknown>>;
+    private isStorageMounted: Record<string, boolean>;
+
+    constructor(id: number) {
+        this.id = id;
+
+        this.storages = {};
+        this.isStorageMounted = {};
+
         this.toolPromise = (async () => {
             this.tool = await this.initialize();
         })();
@@ -46,6 +73,10 @@ export abstract class WorkerTool<Tool> {
         switch (event.data.type) {
             case 'init': {
                 this.init(event.data);
+                break;
+            }
+            case 'storage': {
+                this.updateStorage(event.data);
                 break;
             }
             case 'call': {
@@ -62,54 +93,66 @@ export abstract class WorkerTool<Tool> {
     async init(message: ToolMessageInit) {
         this.sharedBuffer = message.sharedBuffer;
         this.arrayInt32 = new Int32Array(this.sharedBuffer);
+        this.lockFs = new Mutex(this.arrayInt32, INDEX_FS_LOCK);
+        this.lockWorker = new Mutex(this.arrayInt32, INDEX_WORKER_LOCK);
+        this.data = new Data(this.sharedBuffer, INDEX_DATA * 4);
         this.portFs = message.portFs;
+
+        // Ensure the tool is initialized
+        if (!this.tool) {
+            await this.toolPromise;
+        }
+
+        // Initialize file system
+        this.fs = this.tool.getFS();
+        this.storageFs = createStorageFS(this.fs, this);
+        this.fs.mkdir('/storages');
+        this.mountStorages();
+    }
+
+    async updateStorage(message: ToolMessageStorage) {
+        // Deserialize storage
+        const storage = deserializeState<Storage<unknown, unknown>>(message.storage);
+
+        this.storages[storage.getID()] = storage;
+
+        this.mountStorages();
+    }
+
+    mountStorages() {
+        if (!this.fs) {
+            return;
+        }
+
+        for (const storageId of Object.keys(this.storages)) {
+            if (!this.isStorageMounted[storageId]) {
+                const path = `/storages/${storageId}`;
+                this.fs.mkdir(path);
+                this.fs.mount(this.storageFs, {
+                    tool: this,
+                    storageId
+                }, path);
+
+                this.isStorageMounted[storageId] = true;
+
+                // NOTE: test
+                console.log(this.fs.readdir('/'));
+                console.log(this.fs.readdir(`${path}/`));
+            }
+        }
     }
 
     async call(message: ToolMessageCall) {
-        // Deserialize storage
-        // TODO: reduce the amount of times storage is passed between workers
-        const storage = deserializeState<Storage<unknown, unknown>>(message.storage);
-        console.log(storage);
+        const storage = this.storages[message.storageId];
+        if (!storage) {
+            throw new Error(`Unknown storage "${message.storageId}".`);
+        }
 
         // Find the file in storage
         const file = await storage.getEntry(message.path);
         if (!(file instanceof StorageFile)) {
             throw new Error('Storage entry is not a file.');
         }
-
-        // NOTE: start test code
-        this.portFs.postMessage({
-            type: 'storage',
-            storage: message.storage
-        });
-
-        console.log('start of test');
-
-        const jobId = Atomics.add(this.arrayInt32, 0, 1);
-
-        console.log('sending message to fs', jobId);
-
-        this.portFs.postMessage({
-            type: 'call',
-            jobId,
-            storageId: storage.getID(),
-            path: file.getParent().getPath()
-        });
-
-        console.log('waiting...');
-
-        Atomics.wait(this.arrayInt32, 1, jobId);
-
-        console.log('done waiting');
-
-        const data = new Data(this.sharedBuffer, 8);
-        const array = data.readStringArray();
-
-        console.log('received', array);
-
-        console.log('end of test');
-
-        // NOTE: end test code
 
         // Ensure the tool is initialized
         if (!this.tool) {
@@ -123,6 +166,49 @@ export abstract class WorkerTool<Tool> {
             id: message.id,
             result
         });
+    }
+
+    callFs(storageId: string, path: string, operation: Operation) {
+        console.log(`worker ${this.id} is waiting for lock...`);
+
+        // Acquire worker lock
+        this.lockWorker.acquire();
+
+        console.log(`worker ${this.id} has lock`);
+
+        // Acquire FS lock
+        this.lockFs.acquire();
+
+        this.portFs.postMessage({
+            type: 'call',
+            storageId,
+            path,
+            operation
+        });
+
+        // Release of FS lock
+        this.lockFs.release();
+
+        console.log(`worker ${this.id} is waiting for response...`);
+
+        // Wait for worker notify
+        Atomics.wait(this.arrayInt32, INDEX_WORKER_NOTIFY, 0);
+
+        // Read response from data buffer
+        this.data.resetOffset();
+        const array = this.data.readStringArray();
+
+        // Clear data buffer
+        this.data.clear();
+
+        console.log(`worker ${this.id} received`, array);
+
+        // Release worker lock
+        this.lockWorker.release();
+
+        console.log(`worker ${this.id} is done`);
+
+        return array;
     }
 
     abstract initialize(): Promise<Tool>;

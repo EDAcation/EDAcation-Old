@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 import {Storage} from '../storage';
+import {updateWorkerStorage} from '../workers';
 
 export type StoragesState = Storage<unknown, unknown>[];
 
@@ -12,6 +13,11 @@ export const storagesSlice = createSlice({
     reducers: {
         addStorage(state, action: PayloadAction<Storage<unknown, unknown>>) {
             state.push(action.payload);
+
+            updateWorkerStorage(action.payload);
+        },
+        updateStorage(_state, action: PayloadAction<Storage<unknown, unknown>>) {
+            updateWorkerStorage(action.payload);
         },
         removeStorage(state, action: PayloadAction<Storage<unknown, unknown>>) {
             return state.filter((storage) => storage.getID() !== action.payload.getID());
@@ -19,4 +25,4 @@ export const storagesSlice = createSlice({
     }
 });
 
-export const {addStorage, removeStorage} = storagesSlice.actions;
+export const {addStorage, updateStorage, removeStorage} = storagesSlice.actions;

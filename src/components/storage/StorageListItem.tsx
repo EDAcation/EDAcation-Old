@@ -4,6 +4,7 @@ import {useDispatch} from 'react-redux';
 
 import {Storage, StorageDirectory} from '../../storage';
 import {accessFilesForStorage} from '../../store/files';
+import {updateStorage} from '../../store/storages';
 import {ButtonClose} from '../button/ButtonClose';
 
 import {Directory} from './Directory';
@@ -31,6 +32,9 @@ export const StorageListItem: React.FC<StorageProps> = ({storage, onRemove}) => 
         setHasPermission(result);
 
         if (result) {
+            // Update storage
+            dispatch(updateStorage(storage));
+
             // Access files from this storage provider
             dispatch(accessFilesForStorage(storage.getID()));
         }

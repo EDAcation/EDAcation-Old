@@ -1,6 +1,10 @@
+import {EmscriptenWrapper, WorkerTool} from './tool';
+
 const debug = (name: string, ...args: unknown[]) => console.log(`[StorageFS.${name}]`, ...args);
 
-export const createStorageFS = (FS) => {
+const nodeToPath = (node) => node.name.split('/').filter((s) => s.length !== 0);
+
+export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const STORAGE_FS: any = {
         ops_table: null,
@@ -9,10 +13,7 @@ export const createStorageFS = (FS) => {
             debug('mount', mount);
 
             // mode: S_IFDIR | 777
-            const node = STORAGE_FS.createNode(null, '/', 0o40000 | 511, 0);
-            node.contents.storage = mount.opts.storage;
-
-            return node;
+            return STORAGE_FS.createNode(null, '/', 0o40000 | 511, 0);
         },
         createNode(parent, name: string, mode: number, dev: number) {
             if (!STORAGE_FS.ops_table) {
@@ -127,7 +128,7 @@ export const createStorageFS = (FS) => {
             readdir(node) {
                 debug('readdir', node);
 
-                throw new Error('Not implemented.');
+                return ['.', '..'].concat(tool.callFs(node.mount.opts.storageId, nodeToPath(node), 'readdir'));
             },
             symlink(parent, newName, oldPath) {
                 debug('symlink', parent, newName, oldPath);

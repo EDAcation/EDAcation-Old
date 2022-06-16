@@ -1,7 +1,9 @@
 import {deserializeState} from '../serializable';
 import {SerializedStorage, Storage, StorageDirectory} from '../storage';
 
+import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './common/constants';
 import {Data} from './common/data';
+import {Mutex} from './common/mutex';
 
 interface MessageInit {
     type: 'init';
@@ -23,6 +25,7 @@ interface MessageCall {
     jobId: number;
     storageId: string;
     path: string[];
+    operation: Operation;
 }
 
 type Message = MessageInit | MessageWorker | MessageStorage | MessageCall;
@@ -31,6 +34,9 @@ interface State {
     sharedBuffer: SharedArrayBuffer;
     arrayUint8: Uint8Array;
     arrayInt32: Int32Array;
+    lockFs: Mutex;
+    lockWorker: Mutex;
+    data: Data;
     ports: MessagePort[];
 
     storages: Record<string, Storage<unknown, unknown>>;
@@ -45,10 +51,16 @@ const handleMessage = async (event: MessageEvent<Message>) => {
         case 'init': {
             const {sharedBuffer} = event.data;
 
+            const arrayUint8 = new Uint8Array(sharedBuffer);
+            const arrayInt32 = new Int32Array(sharedBuffer);
+
             state = {
                 sharedBuffer,
-                arrayUint8: new Uint8Array(sharedBuffer),
-                arrayInt32: new Int32Array(sharedBuffer),
+                arrayUint8,
+                arrayInt32,
+                lockFs: new Mutex(arrayInt32, INDEX_FS_LOCK),
+                lockWorker: new Mutex(arrayInt32, INDEX_WORKER_LOCK),
+                data: new Data(sharedBuffer, INDEX_DATA * 4),
                 ports: [],
 
                 storages: {}
@@ -74,7 +86,9 @@ const handleMessage = async (event: MessageEvent<Message>) => {
             break;
         }
         case 'call': {
-            const {jobId, storageId, path} = event.data;
+            const {storageId, path, operation} = event.data;
+
+            console.log('FS received request', storageId, path, operation);
 
             const storage = state.storages[storageId];
             if (!storage) {
@@ -82,26 +96,42 @@ const handleMessage = async (event: MessageEvent<Message>) => {
                 break;
             }
 
-            const entry = await storage.getEntry(path);
-            if (!(entry instanceof StorageDirectory)) {
-                console.error('Storage entry is not a directory.');
-                break;
-            }
+            console.log('FS is waiting for FS lock...');
 
-            const entries = await entry.getEntries(true);
+            // Acquire FS lock
+            state.lockFs.acquire();
+
+            console.log('FS has FS lock');
+
+            // Perform operation
             const result: string[] = [];
-            for (const entry of entries) {
-                result.push(entry.getName());
+            switch (operation) {
+                case 'readdir': {
+                    const entry = await storage.getEntry(path);
+                    if (!(entry instanceof StorageDirectory)) {
+                        console.error('Storage entry is not a directory.');
+                        break;
+                    }
+
+                    const entries = await entry.getEntries(true);
+                    for (const entry of entries) {
+                        result.push(entry.getName());
+                    }
+                    break;
+                }
             }
-            console.log(result);
 
-            const data = new Data(state.sharedBuffer, 8);
-            data.writeStringArray(result);
+            // Write response to data buffer
+            state.data.resetOffset();
+            state.data.writeStringArray(result);
 
-            console.log(state.arrayUint8.slice(8, 8 + data.getOffset()));
+            // Notify worker
+            Atomics.notify(state.arrayInt32, INDEX_WORKER_NOTIFY);
 
-            Atomics.store(state.arrayInt32, 1, jobId);
-            Atomics.notify(state.arrayInt32, 1);
+            // Release FS lock
+            state.lockFs.release();
+
+            console.log('FS is done');
 
             break;
         }

@@ -6,12 +6,19 @@ export class Data {
     private readonly buffer: ArrayBuffer | SharedArrayBuffer;
     private readonly dataView: DataView;
     private arrayUint8: Uint8Array;
+    private readonly originalOffset: number;
     private offset: number;
 
     constructor(buffer: ArrayBuffer | SharedArrayBuffer, offset: number = 0) {
         this.buffer = buffer;
         this.dataView = new DataView(buffer);
+        this.arrayUint8 = new Uint8Array(this.buffer);
+        this.originalOffset = offset;
         this.offset = offset;
+    }
+
+    getLength() {
+        return this.buffer.byteLength - this.originalOffset;
     }
 
     getOffset() {
@@ -20,6 +27,10 @@ export class Data {
 
     setOffset(offset: number) {
         this.offset = offset;
+    }
+
+    resetOffset() {
+        this.offset = this.originalOffset;
     }
 
     readUint8() {
@@ -48,10 +59,6 @@ export class Data {
 
     readUint8Array() {
         const length = this.readUint32();
-
-        if (!this.arrayUint8) {
-            this.arrayUint8 = new Uint8Array(this.buffer);
-        }
 
         const data = this.arrayUint8.slice(this.offset, this.offset + length);
         this.offset += length;
@@ -96,10 +103,6 @@ export class Data {
     writeUint8Array(data: Uint8Array) {
         this.writeUint32(data.byteLength);
 
-        if (!this.arrayUint8) {
-            this.arrayUint8 = new Uint8Array(this.buffer);
-        }
-
         this.arrayUint8.set(data, this.offset);
         this.offset += data.byteLength;
     }
@@ -114,5 +117,9 @@ export class Data {
         for (let i = 0; i < data.length; i++) {
             this.writeString(data[i]);
         }
+    }
+
+    clear() {
+        this.arrayUint8.set(new Uint8Array(), this.originalOffset);
     }
 }

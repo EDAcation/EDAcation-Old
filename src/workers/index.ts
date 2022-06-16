@@ -1,3 +1,6 @@
+import {serializeState} from '../serializable';
+import {Storage} from '../storage';
+
 const sharedBuffer = new SharedArrayBuffer(1024);
 
 // @ts-expect-error: import.meta.url is not in the typing without ESM
@@ -29,3 +32,21 @@ for (const worker of workers) {
         port: channel.port2
     }, [channel.port2]);
 }
+
+export const updateWorkerStorage = async (storage: Storage<unknown, unknown>) => {
+    if (!await storage.hasPermission()) {
+        return;
+    }
+
+    workerFs.postMessage({
+        type: 'storage',
+        storage: serializeState(storage)
+    });
+
+    for (const worker of workers) {
+        worker.postMessage({
+            type: 'storage',
+            storage: serializeState(storage)
+        });
+    }
+};
