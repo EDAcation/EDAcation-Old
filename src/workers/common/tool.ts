@@ -136,8 +136,13 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
                 this.isStorageMounted[storageId] = true;
 
                 // NOTE: test
+                this.fs.writeFile('/tmp/test.txt', 'Hello World!');
+                console.log(this.fs.readFile('/tmp/test.txt'));
+
                 console.log(this.fs.readdir('/'));
                 console.log(this.fs.readdir(`${path}/`));
+                console.log(this.fs.writeFile(`${path}/test.txt`, 'Hello World!'));
+                console.log(this.fs.readFile(`${path}/topEntity.v`));
             }
         }
     }

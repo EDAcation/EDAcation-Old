@@ -93,17 +93,57 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
             getattr(node) {
                 debug('getattr', node);
 
-                throw new Error('Not implemented.');
+                const attr = {
+                    ino: node.id,
+                    mode: node.mode,
+                    nlink: 1,
+                    uid: 0,
+                    gid: 0,
+                    rdev: node.rdev,
+                    size: 0,
+                    atime: new Date(node.timestamp),
+                    mtime: new Date(node.timestamp),
+                    ctime: new Date(node.timestamp),
+                    blksize: 4096,
+                    blocks: 0
+                };
+
+                if (FS.isDir(node.mode)) {
+                    attr.size = 4096;
+                } else if (FS.isFile(node.mode)) {
+                    attr.size = node.usedBytes;
+                } else if (FS.isLink(node.mode)) {
+                    attr.size = node.link.length;
+                } else {
+                    attr.size = 0;
+                }
+
+                attr.blocks = Math.ceil(attr.size / attr.blksize);
+
+                return attr;
             },
             setattr(node, attr) {
                 debug('setattr', node, attr);
 
-                throw new Error('Not implemented.');
+                if (attr.mode !== undefined) {
+                    node.mode = attr.mode;
+                }
+
+                if (attr.timestamp !== undefined) {
+                    node.timestamp = attr.timestamp;
+                }
+
+                // TODO: remove?
+                if (attr.size !== undefined) {
+                    // MEMFS.resizeFileStorage(node, attr.size);
+                }
             },
             lookup(parent, name) {
                 debug('lookup', parent, name);
 
-                throw new Error('Not implemented.');
+                // TODO: figure out the purpose of this method and its response
+                // throw new Error('Not implemented.');
+                throw FS.genericErrors[44];
             },
             mknod(parent, name: string, mode: number, dev: number) {
                 debug('mknod', parent, name, mode, dev);
