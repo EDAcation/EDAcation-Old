@@ -129,20 +129,50 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
                 const path = `/storages/${storageId}`;
                 this.fs.mkdir(path);
                 this.fs.mount(this.storageFs, {
-                    tool: this,
                     storageId
                 }, path);
 
                 this.isStorageMounted[storageId] = true;
 
-                // NOTE: test
-                this.fs.writeFile('/tmp/test.txt', 'Hello World!');
-                console.log(this.fs.readFile('/tmp/test.txt'));
+                // NOTE: test code from here
+                if (this.id === 1) {
+                    const node = this.fs.lookupPath('/tmp', {}).node as any;
 
-                console.log(this.fs.readdir('/'));
-                console.log(this.fs.readdir(`${path}/`));
-                console.log(this.fs.writeFile(`${path}/test.txt`, 'Hello World!'));
-                console.log(this.fs.readFile(`${path}/topEntity.v`));
+                    const addLogging = (obj) => {
+                        for (const [key, value] of Object.entries(obj)) {
+                            if (typeof value === 'function') {
+                                obj[key] = (...args) => {
+                                    console.log(`[MEMFS.${key} args]`, ...args);
+                                    try {
+                                        const result = value(...args);
+                                        console.log(`[MEMFS.${key} result]`, result);
+                                        return result;
+                                    } catch (err) {
+                                        console.log(`[MEMFS.${key} error]`, err);
+                                        throw err;
+                                    }
+                                };
+                            } else if (typeof value === 'object') {
+                                obj[key] = addLogging(value);
+                            }
+                        }
+                        return obj;
+                    };
+
+                    node.mount.type = addLogging(node.mount.type);
+
+                    this.fs.writeFile('/tmp/test.txt', 'Hello World!');
+                    console.log(this.fs.readdir('/'));
+                    console.log(this.fs.lookupPath('/tmp', {}));
+                    console.log(this.fs.readFile('/tmp/test.txt', {
+                        encoding: 'utf8'
+                    }));
+
+                    // console.log(this.fs.writeFile(`${path}/test.txt`, 'Hello World!'));
+                    console.log(this.fs.readdir(`${path}`));
+                    console.log(this.fs.lookupPath(path, {}));
+                    console.log(this.fs.readFile(`${path}/topEntity.v`));
+                }
             }
         }
     }

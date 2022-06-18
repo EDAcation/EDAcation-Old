@@ -55,36 +55,6 @@ export class WorkerYosys extends WorkerTool<Yosys> {
             })
         }];
     }
-
-    // async updateMount(storage: Storage<unknown, unknown>) {
-    //     // NOTE: this entire method is test code
-
-    //     if (!this.STORAGE_FS) {
-    //         throw new Error('Storage file system does not exist.');
-    //     }
-
-    //     if (!await storage.hasPermission()) {
-    //         console.warn('No permission');
-    //         return;
-    //     }
-
-    //     const fs = this.tool.getFS();
-    //     const path = `/storages/${storage.getID()}`;
-
-    //     try {
-    //         fs.lookupPath(path, {});
-    //     } catch (err) {
-    //         if (err instanceof Error && err.message === 'No such file or directory') {
-    //             fs.mkdir(path);
-    //             fs.mount(this.STORAGE_FS, {
-    //                 storage
-    //             }, path);
-    //             console.log(fs.readdir(`${path}/`));
-    //         } else {
-    //             throw err;
-    //         }
-    //     }
-    // }
 }
 
 new WorkerYosys(1);
