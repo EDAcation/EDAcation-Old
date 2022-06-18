@@ -69,7 +69,7 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized exten
         return [this.getStorage().getID()].concat(this.getPath()).join('/');
     }
 
-    abstract delete(): Promise<void>;
+    abstract delete(recursive?: boolean): Promise<void>;
 }
 
 // TODO: copy, move

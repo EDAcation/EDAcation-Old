@@ -55,11 +55,13 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
         return new StorageFileFSA(this.storage, this, handle);
     }
 
-    async delete() {
+    async delete(recursive?: boolean) {
         if (!this.parent) {
             throw new StorageError('Can\'t delete root directory.');
         }
-        await this.parent.getHandle().removeEntry(this.handle.name);
+        await this.parent.getHandle().removeEntry(this.handle.name, {
+            recursive
+        });
     }
 }
 

@@ -2,7 +2,12 @@ import {addDebugLogging} from '../../util';
 
 import {EmscriptenWrapper, WorkerTool} from './tool';
 
-const nodeToPath = (node: FSNode) => node.name.split('/').filter((s) => s.length !== 0);
+const nodeToPath = (node: FSNode) => {
+    if (node.name === '/') {
+        return [];
+    }
+    return [nodeToPath(node.parent)].concat(node.name);
+};
 
 // TODO: upstream these types to @types/emscripten
 
@@ -187,6 +192,7 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                 }
             },
             lookup(_parent: FSNode, _name: string): FSLookup {
+                // TODO: should this be: return parent.contents[name];
                 throw FS.genericErrors[44];
             },
             mknod(parent: FSNode, name: string, mode: number, dev: number): FSNode {
@@ -196,10 +202,19 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                 throw new Error('Not implemented.');
             },
             unlink(parent: FSNode, name: string) {
-                throw new Error('Not implemented.');
+                tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent).concat(name), 'unlink');
+                parent.timestamp = Date.now();
             },
             rmdir(parent: FSNode, name: string) {
-                throw new Error('Not implemented.');
+                const node = parent.contents[name] as FSNode;
+                if (!node) {
+                    throw new Error('Directory not empty');
+                }
+
+                tool.callFs(parent.mount.opts.storageId as string, nodeToPath(node), 'rmdir');
+
+                delete parent.contents[name];
+                parent.timestamp = Date.now();
             },
             readdir(node: FSNode) {
                 return ['.', '..'].concat(tool.callFs(node.mount.opts.storageId as string, nodeToPath(node), 'readdir'));

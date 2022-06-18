@@ -1,5 +1,5 @@
 import {deserializeState} from '../serializable';
-import {SerializedStorage, Storage, StorageDirectory} from '../storage';
+import {SerializedStorage, Storage, StorageDirectory, StorageFile} from '../storage';
 
 import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './common/constants';
 import {Data} from './common/data';
@@ -96,6 +96,8 @@ const handleMessage = async (event: MessageEvent<Message>) => {
                 break;
             }
 
+            const entry = await storage.getEntry(path);
+
             console.log('FS is waiting for FS lock...');
 
             // Acquire FS lock
@@ -104,26 +106,61 @@ const handleMessage = async (event: MessageEvent<Message>) => {
             console.log('FS has FS lock');
 
             // Perform operation
-            const result: string[] = [];
-            switch (operation) {
-                case 'readdir': {
-                    const entry = await storage.getEntry(path);
-                    if (!(entry instanceof StorageDirectory)) {
-                        console.error('Storage entry is not a directory.');
+            try {
+                const result: string[] = [];
+                switch (operation) {
+                    case 'readdir': {
+                        if (!(entry instanceof StorageDirectory)) {
+                            throw new Error('Storage entry is not a directory.');
+                        }
+
+                        // Read directory
+                        const entries = await entry.getEntries(true);
+                        for (const entry of entries) {
+                            result.push(entry.getName());
+                        }
+
                         break;
                     }
+                    case 'rmdir': {
+                        if (!(entry instanceof StorageDirectory)) {
+                            throw new Error('Storage entry is not a directory.');
+                        }
 
-                    const entries = await entry.getEntries(true);
-                    for (const entry of entries) {
-                        result.push(entry.getName());
+                        // Delete directory
+                        await entry.delete();
+
+                        break;
                     }
-                    break;
+                    case 'unlink': {
+                        if (!(entry instanceof StorageFile)) {
+                            throw new Error('Storage entry is not a file.');
+                        }
+
+                        // Delete file
+                        await entry.delete();
+
+                        break;
+                    }
+                }
+
+                // Write success response to data buffer
+                state.data.resetOffset();
+                state.data.writeUint8(0);
+                state.data.writeStringArray(result);
+            } catch (err) {
+                console.error(err);
+
+                // Write error response to data buffer
+                state.data.resetOffset();
+                state.data.writeUint8(1);
+
+                if (err instanceof Error) {
+                    state.data.writeString(err.message);
+                } else {
+                    state.data.writeString('Unknown error.');
                 }
             }
-
-            // Write response to data buffer
-            state.data.resetOffset();
-            state.data.writeStringArray(result);
 
             // Notify worker
             Atomics.notify(state.arrayInt32, INDEX_WORKER_NOTIFY);

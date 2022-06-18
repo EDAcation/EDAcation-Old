@@ -158,7 +158,7 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
                     //     encoding: 'utf8'
                     // }));
 
-                    this.fs.writeFile(`${path}/test.txt`, 'Hello World!');
+                    // this.fs.writeFile(`${path}/test.txt`, 'Hello World!');
                     // console.log(this.fs.readdir(`${path}`));
                     // console.log(this.fs.lookupPath(path, {}));
                     // console.log(this.fs.readFile(`${path}/topEntity.v`));
@@ -221,19 +221,28 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
 
         // Read response from data buffer
         this.data.resetOffset();
-        const array = this.data.readStringArray();
+
+        let result: string[];
+
+        // Check if the response was an error
+        const errorCode = this.data.readUint8();
+        if (errorCode > 0) {
+            throw new Error(`FS error: ${this.data.readString()}`);
+        } else {
+            result = this.data.readStringArray();
+        }
 
         // Clear data buffer
         this.data.clear();
 
-        console.log(`worker ${this.id} received`, array);
+        console.log(`worker ${this.id} received`, result);
 
         // Release worker lock
         this.lockWorker.release();
 
         console.log(`worker ${this.id} is done`);
 
-        return array;
+        return result;
     }
 
     abstract initialize(): Promise<Tool>;
