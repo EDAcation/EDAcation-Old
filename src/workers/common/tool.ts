@@ -1,5 +1,6 @@
 import {deserializeState} from '../../serializable';
 import {SerializedStorage, Storage, StorageFile} from '../../storage';
+import {addDebugLogging} from '../../util';
 
 import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './constants';
 import {Data} from './data';
@@ -136,42 +137,31 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
 
                 // NOTE: test code from here
                 if (this.id === 1) {
-                    const node = this.fs.lookupPath('/tmp', {}).node as any;
+                    const node = this.fs.lookupPath('/tmp', {}).node;
 
-                    const addLogging = (obj) => {
-                        for (const [key, value] of Object.entries(obj)) {
-                            if (typeof value === 'function') {
-                                obj[key] = (...args) => {
-                                    console.log(`[MEMFS.${key} args]`, ...args);
-                                    try {
-                                        const result = value(...args);
-                                        console.log(`[MEMFS.${key} result]`, result);
-                                        return result;
-                                    } catch (err) {
-                                        console.log(`[MEMFS.${key} error]`, err);
-                                        throw err;
-                                    }
-                                };
-                            } else if (typeof value === 'object') {
-                                obj[key] = addLogging(value);
-                            }
-                        }
-                        return obj;
-                    };
+                    // @ts-expect-error: FSNode is an empty interface
+                    node.mount.type = addDebugLogging('MEMFS', node.mount.type);
 
-                    node.mount.type = addLogging(node.mount.type);
+                    // @ts-expect-error: fs is not defined in worker context
+                    self.fs = this.fs;
+
+                    this.fs.mkdir('/test');
+                    // @ts-expect-error: this.fs.filesystems does not exist in typing
+                    this.fs.mount(this.fs.filesystems.MEMFS, '/test');
+
+                    console.log(this.fs.lookupPath('/test', {}));
 
                     this.fs.writeFile('/tmp/test.txt', 'Hello World!');
-                    console.log(this.fs.readdir('/'));
-                    console.log(this.fs.lookupPath('/tmp', {}));
-                    console.log(this.fs.readFile('/tmp/test.txt', {
-                        encoding: 'utf8'
-                    }));
+                    // console.log(this.fs.readdir('/'));
+                    // console.log(this.fs.lookupPath('/tmp', {}));
+                    // console.log(this.fs.readFile('/tmp/test.txt', {
+                    //     encoding: 'utf8'
+                    // }));
 
-                    // console.log(this.fs.writeFile(`${path}/test.txt`, 'Hello World!'));
-                    console.log(this.fs.readdir(`${path}`));
-                    console.log(this.fs.lookupPath(path, {}));
-                    console.log(this.fs.readFile(`${path}/topEntity.v`));
+                    this.fs.writeFile(`${path}/test.txt`, 'Hello World!');
+                    // console.log(this.fs.readdir(`${path}`));
+                    // console.log(this.fs.lookupPath(path, {}));
+                    // console.log(this.fs.readFile(`${path}/topEntity.v`));
                 }
             }
         }
@@ -203,7 +193,7 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
         });
     }
 
-    callFs(storageId: string, path: string, operation: Operation) {
+    callFs(storageId: string, path: string[], operation: Operation) {
         console.log(`worker ${this.id} is waiting for lock...`);
 
         // Acquire worker lock
