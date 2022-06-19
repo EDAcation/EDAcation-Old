@@ -35,7 +35,7 @@ export const execute = async (worker: Worker, file: EditorFileLoaded) => new Pro
     worker.postMessage({
         type: 'call',
         id,
-        storage: serializeState(file.file.getStorage()),
+        storageId: file.file.getStorage().getID(),
         path: file.path
     });
 });

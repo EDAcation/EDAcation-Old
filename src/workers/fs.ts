@@ -26,6 +26,7 @@ interface MessageCall {
     storageId: string;
     path: string[];
     operation: Operation;
+    [key: string]: unknown;
 }
 
 type Message = MessageInit | MessageWorker | MessageStorage | MessageCall;
@@ -86,7 +87,7 @@ const handleMessage = async (event: MessageEvent<Message>) => {
             break;
         }
         case 'call': {
-            const {storageId, path, operation} = event.data;
+            const {storageId, path, operation, ...args} = event.data;
 
             console.log('FS received request', storageId, path, operation);
 
@@ -107,7 +108,10 @@ const handleMessage = async (event: MessageEvent<Message>) => {
 
             // Perform operation
             try {
-                const result: string[] = [];
+                // Write success response to data buffer (overriden in case of an error)
+                state.data.resetOffset();
+                state.data.writeUint8(0);
+
                 switch (operation) {
                     case 'readdir': {
                         if (!(entry instanceof StorageDirectory)) {
@@ -116,9 +120,9 @@ const handleMessage = async (event: MessageEvent<Message>) => {
 
                         // Read directory
                         const entries = await entry.getEntries(true);
-                        for (const entry of entries) {
-                            result.push(entry.getName());
-                        }
+
+                        // Write response to data buffer
+                        state.data.writeStringArray(entries.map((entry) => entry.getName()));
 
                         break;
                     }
@@ -142,17 +146,47 @@ const handleMessage = async (event: MessageEvent<Message>) => {
 
                         break;
                     }
-                }
+                    case 'stat': {
+                        // Get file type
+                        let type = 0;
+                        if (entry instanceof StorageDirectory) {
+                            type = 1;
+                        } else if (entry instanceof StorageFile) {
+                            type = 2;
+                        }
 
-                // Write success response to data buffer
-                state.data.resetOffset();
-                state.data.writeUint8(0);
-                state.data.writeStringArray(result);
+                        // Get file size
+                        const size = entry ? await entry.getSize() : 0;
+
+                        // Write response to data buffer
+                        state.data.writeUint8(type);
+                        state.data.writeUint32(size);
+
+                        break;
+                    }
+                    case 'read': {
+                        if (!(entry instanceof StorageFile)) {
+                            throw new Error('Storage entry is not a file.');
+                        }
+
+                        // Read file
+                        const result = await entry.read(args.start as number, args.end as number);
+                        const resultArray = new Uint8Array(result);
+
+                        // Write response to data buffer
+                        state.data.writeUint8Array(resultArray);
+
+                        break;
+                    }
+                    case 'write': {
+                        throw new Error('Not implemented');
+                    }
+                }
             } catch (err) {
                 console.error(err);
 
                 // Write error response to data buffer
-                state.data.resetOffset();
+                state.data.clear();
                 state.data.writeUint8(1);
 
                 if (err instanceof Error) {

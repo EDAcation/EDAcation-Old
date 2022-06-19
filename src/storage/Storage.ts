@@ -69,6 +69,8 @@ export abstract class StorageEntry<DirectoryHandle, FileHandle, Serialized exten
         return [this.getStorage().getID()].concat(this.getPath()).join('/');
     }
 
+    abstract getSize(): Promise<number>;
+
     abstract delete(recursive?: boolean): Promise<void>;
 }
 
@@ -135,16 +137,20 @@ export abstract class StorageFile<DirectoryHandle, FileHandle, Serialized extend
         return this.handle;
     }
 
-    abstract read(): Promise<string>;
+    abstract read(start?: number, end?: number): Promise<ArrayBuffer>;
+
+    abstract readText(start?: number, end?: number): Promise<string>;
 
     async readJSON() {
-        return JSON.parse(await this.read());
+        return JSON.parse(await this.readText());
     }
 
-    abstract write(content: string): Promise<void>;
+    abstract write(buffer: ArrayBuffer, start?: number, end?: number): Promise<void>;
+
+    abstract writeText(content: string, start?: number): Promise<void>;
 
     async writeJSON(content: unknown) {
-        await this.write(JSON.stringify(content));
+        await this.writeText(JSON.stringify(content));
     }
 }
 
@@ -219,7 +225,7 @@ export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends Se
         for (let i = 0; i < path.length; i++) {
             const entry = await current.getEntry(path[i]);
             if (!entry) {
-                throw new StorageError(`Entry "${path[i]}" in path "${path.join('/')}" does not exist.`);
+                return undefined;
             }
             if (i < path.length - 1) {
                 if (!(entry instanceof StorageDirectory)) {

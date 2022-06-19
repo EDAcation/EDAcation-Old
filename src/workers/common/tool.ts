@@ -145,23 +145,25 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
                     // @ts-expect-error: fs is not defined in worker context
                     self.fs = this.fs;
 
-                    this.fs.mkdir('/test');
-                    // @ts-expect-error: this.fs.filesystems does not exist in typing
-                    this.fs.mount(this.fs.filesystems.MEMFS, '/test');
+                    // this.fs.mkdir('/test');
+                    // // @ts-expect-error: this.fs.filesystems does not exist in typing
+                    // this.fs.mount(this.fs.filesystems.MEMFS, '/test');
 
-                    console.log(this.fs.lookupPath('/test', {}));
+                    // console.debug(this.fs.lookupPath('/test', {}));
 
-                    this.fs.writeFile('/tmp/test.txt', 'Hello World!');
-                    // console.log(this.fs.readdir('/'));
-                    // console.log(this.fs.lookupPath('/tmp', {}));
-                    // console.log(this.fs.readFile('/tmp/test.txt', {
+                    // this.fs.writeFile('/tmp/test.txt', 'Hello World!');
+                    // console.debug(this.fs.readdir('/'));
+                    // console.debug(this.fs.lookupPath('/tmp', {}));
+                    // console.debug(this.fs.readFile('/tmp/test.txt', {
                     //     encoding: 'utf8'
                     // }));
 
                     // this.fs.writeFile(`${path}/test.txt`, 'Hello World!');
-                    // console.log(this.fs.readdir(`${path}`));
-                    // console.log(this.fs.lookupPath(path, {}));
-                    // console.log(this.fs.readFile(`${path}/topEntity.v`));
+                    // console.debug(this.fs.readdir(`${path}`));
+                    // console.debug(this.fs.lookupPath(path, {}));
+                    console.debug(this.fs.readFile(`${path}/example.v`, {
+                        encoding: 'utf8'
+                    }));
                 }
             }
         }
@@ -193,13 +195,17 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
         });
     }
 
-    callFs(storageId: string, path: string[], operation: Operation) {
-        console.log(`worker ${this.id} is waiting for lock...`);
+    callFs(storageId: string, path: string[], operation: 'readdir'): string[];
+    callFs(storageId: string, path: string[], operation: 'rmdir' | 'unlink'): void;
+    callFs(storageId: string, path: string[], operation: 'stat'): [number, number];
+    callFs(storageId: string, path: string[], operation: 'read', args: {start: number; end: number}): Uint8Array;
+    callFs(storageId: string, path: string[], operation: Operation, args?: Record<string, unknown>): unknown {
+        console.debug(`worker ${this.id} is waiting for lock...`);
 
         // Acquire worker lock
         this.lockWorker.acquire();
 
-        console.log(`worker ${this.id} has lock`);
+        console.debug(`worker ${this.id} has lock`);
 
         // Acquire FS lock
         this.lockFs.acquire();
@@ -208,13 +214,14 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
             type: 'call',
             storageId,
             path,
-            operation
+            operation,
+            ...args
         });
 
         // Release of FS lock
         this.lockFs.release();
 
-        console.log(`worker ${this.id} is waiting for response...`);
+        console.debug(`worker ${this.id} is waiting for response...`);
 
         // Wait for worker notify
         Atomics.wait(this.arrayInt32, INDEX_WORKER_NOTIFY, 0);
@@ -222,25 +229,39 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
         // Read response from data buffer
         this.data.resetOffset();
 
-        let result: string[];
+        let result: unknown;
 
         // Check if the response was an error
         const errorCode = this.data.readUint8();
         if (errorCode > 0) {
             throw new Error(`FS error: ${this.data.readString()}`);
-        } else {
-            result = this.data.readStringArray();
+        }
+
+        // Read data
+        switch (operation) {
+            case 'readdir': {
+                result = this.data.readStringArray();
+                break;
+            }
+            case 'stat': {
+                result = [this.data.readUint8(), this.data.readUint32()];
+                break;
+            }
+            case 'read': {
+                result = this.data.readUint8Array();
+                break;
+            }
         }
 
         // Clear data buffer
         this.data.clear();
 
-        console.log(`worker ${this.id} received`, result);
+        console.debug(`worker ${this.id} received`, result);
 
         // Release worker lock
         this.lockWorker.release();
 
-        console.log(`worker ${this.id} is done`);
+        console.debug(`worker ${this.id} is done`);
 
         return result;
     }

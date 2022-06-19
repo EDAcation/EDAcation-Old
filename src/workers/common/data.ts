@@ -121,5 +121,6 @@ export class Data {
 
     clear() {
         this.arrayUint8.set(new Uint8Array(), this.originalOffset);
+        this.resetOffset();
     }
 }

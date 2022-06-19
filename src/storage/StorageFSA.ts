@@ -55,6 +55,10 @@ export class StorageDirectoryFSA extends StorageDirectory<FileSystemDirectoryHan
         return new StorageFileFSA(this.storage, this, handle);
     }
 
+    async getSize() {
+        return 4096;
+    }
+
     async delete(recursive?: boolean) {
         if (!this.parent) {
             throw new StorageError('Can\'t delete root directory.');
@@ -77,13 +81,43 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
         return this.handle.name;
     }
 
-    async read() {
+    async getSize(): Promise<number> {
         const file = await this.handle.getFile();
-        return await file.text();
+        return file.size;
     }
 
-    async write(content: string) {
+    async read(start?: number, end?: number) {
+        const file = await this.handle.getFile();
+        return await file.slice(start, end).arrayBuffer();
+    }
+
+    async readText(start?: number, end?: number) {
+        const file = await this.handle.getFile();
+        return await file.slice(start, end).text();
+    }
+
+    async write(buffer: ArrayBuffer, start?: number, end?: number) {
         const writable = await this.handle.createWritable();
+
+        if (start) {
+            writable.seek(start);
+
+            if (end) {
+                buffer = buffer.slice(0, end - start);
+            }
+        }
+
+        await writable.write(buffer);
+        await writable.close();
+    }
+
+    async writeText(content: string, start?: number) {
+        const writable = await this.handle.createWritable();
+
+        if (start) {
+            writable.seek(start);
+        }
+
         await writable.write(content);
         await writable.close();
     }

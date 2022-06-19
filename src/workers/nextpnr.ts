@@ -21,7 +21,7 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
     }
 
     async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
-        const content = await file.read();
+        const content = await file.readText();
         this.tool.getFS().writeFile('luts.json', content);
 
         // @ts-expect-error: callMain does not exist on type

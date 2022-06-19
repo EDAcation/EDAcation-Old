@@ -2,20 +2,28 @@ import {addDebugLogging} from '../../util';
 
 import {EmscriptenWrapper, WorkerTool} from './tool';
 
+const EINVAL = 22;
+
+const S_IFDIR = 0o40000;
+const S_IFREG = 0o100000;
+const S_IRWXU = 0o700;
+const S_IRWXG = 0o070;
+const S_IRWXO = 0o007;
+const S_IRWX = S_IRWXU | S_IRWXG | S_IRWXO;
+
+const SEEK_CUR = 1;
+const SEEK_END = 2;
+
 const nodeToPath = (node: FSNode) => {
     if (node.name === '/') {
         return [];
     }
-    return [nodeToPath(node.parent)].concat(node.name);
+    return nodeToPath(node.parent).concat(node.name);
 };
 
 // TODO: upstream these types to @types/emscripten
 
-interface FSType {
-    // TODO: figure out if these exist on all FS types
-    createNode(parent: FSNode | null, name: string, mode: number, dev: number): FSNode;
-    mount(mount: FSMount): FSNode;
-}
+type FSType = unknown;
 
 interface FSMount {
     mountpoint: string;
@@ -26,7 +34,7 @@ interface FSMount {
 }
 
 interface FSNode {
-    contents: Record<string | number | symbol, unknown>;
+    contents: unknown;
     id: number;
     mode: number;
     mount: FSMount;
@@ -38,10 +46,8 @@ interface FSNode {
     rdev: number;
     stream_ops: unknown;
     timestamp: number;
-}
-
-interface FSNodeFile extends FSNode {
-    usedBytes: number;
+    // NOTE: specific to Storage FS
+    lastSize?: number;
 }
 
 interface FSStream {
@@ -70,10 +76,9 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
         ops_table: null,
 
         mount(_mount: FSMount): FSNode {
-            // mode: S_IFDIR | 777
-            return STORAGE_FS.createNode(null, '/', 0o40000 | 511, 0);
+            return STORAGE_FS.createNode(null, '/', S_IFDIR | S_IRWX, 0);
         },
-        createNode(parent: FSNode | null, name: string, mode: number, dev: number): FSNode {
+        createNode(parent: FSNode | null, name: string, mode: number, dev: number, size?: number): FSNode {
             if (!STORAGE_FS.ops_table) {
                 STORAGE_FS.ops_table = {
                     dir: {
@@ -124,24 +129,22 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
             if (FS.isDir(node.mode)) {
                 node.node_ops = STORAGE_FS.ops_table.dir.node;
                 node.stream_ops = STORAGE_FS.ops_table.dir.stream;
-                node.contents = {};
+                node.lastSize = size || 4096;
             } else if (FS.isFile(node.mode)) {
                 node.node_ops = STORAGE_FS.ops_table.file.node;
                 node.stream_ops = STORAGE_FS.ops_table.file.stream;
-                node.usedBytes = 0;
-                node.contents = null;
+                node.lastSize = size || 0;
             }
 
             node.timestamp = Date.now();
 
             if (parent) {
-                parent.contents[name] = node;
                 parent.timestamp = node.timestamp;
             }
 
             return node;
         },
-        syncfs(mount, populate, callback) {
+        syncfs(_mount, _populate, _callback) {
             throw new Error('Not implemented.');
         },
 
@@ -154,46 +157,45 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                     uid: 0,
                     gid: 0,
                     rdev: node.rdev,
-                    size: 0,
                     atime: new Date(node.timestamp),
                     mtime: new Date(node.timestamp),
                     ctime: new Date(node.timestamp),
+                    size: node.lastSize || 0,
                     blksize: 4096,
                     blocks: 0
                 };
-
-                if (FS.isDir(node.mode)) {
-                    attr.size = 4096;
-                } else if (FS.isFile(node.mode)) {
-                    attr.size = (node as FSNodeFile).usedBytes;
-                } else if (FS.isLink(node.mode)) {
-                    // attr.size = (node as FSNodeLink).link.length;
-                    throw new Error('Storage FS does not support link nodes.');
-                } else {
-                    attr.size = 0;
-                }
 
                 attr.blocks = Math.ceil(attr.size / attr.blksize);
 
                 return attr;
             },
-            setattr(node: FSNode, attr) {
-                if (attr.mode !== undefined) {
-                    node.mode = attr.mode;
-                }
+            setattr(_node: FSNode, _attr: Record<string, unknown>) {
+                // if (attr.mode !== undefined) {
+                //     node.mode = attr.mode;
+                // }
 
-                if (attr.timestamp !== undefined) {
-                    node.timestamp = attr.timestamp;
-                }
+                // if (attr.timestamp !== undefined) {
+                //     node.timestamp = attr.timestamp;
+                // }
 
-                // TODO: remove?
-                if (attr.size !== undefined) {
-                    // MEMFS.resizeFileStorage(node, attr.size);
-                }
+                throw new Error('Storage FS does not support setting file attributes.');
             },
-            lookup(_parent: FSNode, _name: string): FSLookup {
-                // TODO: should this be: return parent.contents[name];
-                throw FS.genericErrors[44];
+            lookup(parent: FSNode, name: string): FSLookup {
+                const [type, size] = tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent).concat(name), 'stat');
+
+                if (type === 0) {
+                    // TODO: the 44 potentially changes between Emscripten versions
+                    throw FS.genericErrors[44];
+                }
+
+                let mode = S_IRWX;
+                if (type === 1) {
+                    mode |= S_IFDIR;
+                } else if (type === 2) {
+                    mode |= S_IFREG;
+                }
+
+                return STORAGE_FS.createNode(parent, name, mode, 0, size);
             },
             mknod(parent: FSNode, name: string, mode: number, dev: number): FSNode {
                 return STORAGE_FS.createNode(parent, name, mode, dev);
@@ -206,14 +208,7 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                 parent.timestamp = Date.now();
             },
             rmdir(parent: FSNode, name: string) {
-                const node = parent.contents[name] as FSNode;
-                if (!node) {
-                    throw new Error('Directory not empty');
-                }
-
-                tool.callFs(parent.mount.opts.storageId as string, nodeToPath(node), 'rmdir');
-
-                delete parent.contents[name];
+                tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent).concat(name), 'rmdir');
                 parent.timestamp = Date.now();
             },
             readdir(node: FSNode) {
@@ -228,14 +223,32 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
         },
 
         stream_ops: {
-            read(stream: FSStream, buffer: ArrayBufferView, offset: number, length: number, position: number): number {
-                throw new Error('Not implemented.');
+            read(stream: FSStream, buffer: Uint8Array, offset: number, length: number, position: number): number {
+                const data = tool.callFs(stream.node.mount.opts.storageId as string, nodeToPath(stream.node), 'read', {
+                    start: position,
+                    end: position + length
+                });
+
+                buffer.set(data, offset);
+
+                return data.length;
             },
             write(stream: FSStream, buffer: ArrayBufferView, offset: number, length: number, position: number, canOwn?: boolean): number {
                 throw new Error('Not implemented.');
             },
             llseek(stream: FSStream, offset: number, whence: number) {
-                throw new Error('Not implemented.');
+                let position = offset;
+                if (whence === SEEK_CUR) {
+                    position += stream.position;
+                } else if (whence === SEEK_END) {
+                    if (FS.isFile(stream.node.mode)) {
+                        position += stream.node.lastSize || 0;
+                    }
+                }
+                if (position < 0) {
+                    throw new FS.ErrnoError(EINVAL);
+                }
+                return position;
             },
             allocate(stream: FSStream, offset: number, length: number) {
                 throw new Error('Not implemented.');

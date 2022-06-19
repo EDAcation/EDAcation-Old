@@ -71,7 +71,11 @@ export const FilesTransform = createTransform<FilesState, SerializedFilesState>(
 
 export const doAccessFile = async (file: EditorFile) => {
     if (await file.storage.hasPermission()) {
-        return await file.storage.getEntry(file.path);
+        const entry = await file.storage.getEntry(file.path);
+        if (!(entry instanceof StorageFile)) {
+            throw new Error('Storage entry is not a file.');
+        }
+        return entry;
     }
 
     return undefined;
@@ -106,7 +110,7 @@ export const loadFile = createAsyncThunk(
             throw new Error('Editor file is already loaded.');
         }
 
-        return await file.file?.read();
+        return await file.file?.readText();
     }
 );
 
@@ -119,12 +123,12 @@ export const saveFile = createAsyncThunk(
             throw new Error('Edtitor file has no content.');
         }
 
-        const currentContent = await file.file?.read();
+        const currentContent = await file.file?.readText();
         if (!force && currentContent !== file.originalContent) {
             throw new Error('Editor file has been changed on storage.');
         }
 
-        await file.file?.write(file.content);
+        await file.file?.writeText(file.content);
 
         return file.content;
     }

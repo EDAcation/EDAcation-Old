@@ -21,17 +21,18 @@ export class WorkerYosys extends WorkerTool<Yosys> {
     }
 
     async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
-        const extension = file.getExtension();
-        const content = await file.read();
+        const path = `/storages/${file.getFullPath()}`;
+        // const extension = file.getExtension();
+        // const content = await file.readText();
 
-        // TODO: use actual file names (required for future multi file settings)
+        // this.tool.getFS().writeFile(`design.${extension}`, content);
 
-        this.tool.getFS().writeFile(`design.${extension}`, content);
+        console.debug('YOSYS', path);
 
         this.tool.getFS().writeFile(`design.ys`, `
             design -reset;
             design -reset-vlog;
-            read_verilog design.${extension};
+            read_verilog ${path};
             proc;
             opt;
             show;
