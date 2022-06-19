@@ -21,7 +21,7 @@
         "clean": "rimraf dist",
         "build": "yarn run clean && yarn run lint && yarn run build:parcel && yarn run build:fix && yarn run build:graphviz",
         "build:parcel": "parcel build public/index.html --public-url . --no-source-maps --no-optimize",
-        "build:fix": "grep -rl _serialize dist | xargs sed -i 's|let _getSerialId, _serialize, _deserialize;||'",
+        "build:fix": "grep -rl _serialize dist | xargs sed -i 's|let _getSerialId, _serialize, _deserialize;|let _getSerialId;|'",
         "build:graphviz": "mkdir -p dist/graphviz/@hpcc-js/wasm && cp node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm dist && cp node_modules/@hpcc-js/wasm/dist/index.min.js dist/graphviz/@hpcc-js/wasm && cp node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm dist/graphviz/@hpcc-js/wasm",
         "dev": "parcel public/index.html"
     },
