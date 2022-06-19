@@ -40,6 +40,7 @@
         "@types/uuid": "^8.3.4",
         "@types/wicg-file-system-access": "^2020.9.5",
         "allotment": "^1.14.2",
+        "coi-serviceworker": "^0.1.6",
         "d3-graphviz": "^4.1.1",
         "digitaljs": "^0.12.1",
         "formik": "^2.2.9",
