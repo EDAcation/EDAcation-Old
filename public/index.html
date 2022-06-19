@@ -18,6 +18,12 @@
 
         <script type="module" src="../src/index.tsx"></script>
 
-        <script type="javascript/worker" src="https://unpkg.com/@hpcc-js/wasm@1.12.8/dist/index.min.js" crossorigin="anonymous"></script>
+        <script type="application/javascript">
+            // Hack to load Graphviz library without Parcel
+            const element = document.createElement('script');
+            element.setAttribute('type', 'javascript/worker');
+            element.setAttribute('src', 'graphviz/@hpcc-js/wasm/index.min.js');
+            document.body.appendChild(element);
+        </script>
     </body>
 </html>

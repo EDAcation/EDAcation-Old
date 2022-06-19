@@ -2,6 +2,7 @@ import {addDebugLogging} from '../../util';
 
 import {EmscriptenWrapper, WorkerTool} from './tool';
 
+const ENOENT = 2;
 const EINVAL = 22;
 
 const S_IFDIR = 0o40000;
@@ -184,8 +185,7 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                 const [type, size] = tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent).concat(name), 'stat');
 
                 if (type === 0) {
-                    // TODO: the 44 potentially changes between Emscripten versions
-                    throw FS.genericErrors[44];
+                    throw new FS.ErrnoError(ENOENT);
                 }
 
                 let mode = S_IRWX;

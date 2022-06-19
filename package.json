@@ -19,11 +19,14 @@
     "scripts": {
         "lint": "eslint src",
         "clean": "rimraf dist",
-        "build": "yarn run clean && yarn run lint && yarn run build:parcel",
+        "build": "yarn run clean && yarn run lint && yarn run build:parcel && yarn run build:fix && yarn run build:graphviz",
         "build:parcel": "parcel build public/index.html --public-url . --no-source-maps --no-optimize",
+        "build:fix": "grep -rl _serialize dist | xargs sed -i '' 's|let _getSerialId, _serialize, _deserialize;||'",
+        "build:graphviz": "mkdir -p dist/graphviz/@hpcc-js/wasm && cp node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm dist && cp node_modules/@hpcc-js/wasm/dist/index.min.js dist/graphviz/@hpcc-js/wasm && cp node_modules/@hpcc-js/wasm/dist/graphvizlib.wasm dist/graphviz/@hpcc-js/wasm",
         "dev": "parcel public/index.html"
     },
     "dependencies": {
+        "@hpcc-js/wasm": "^1.14.1",
         "@monaco-editor/react": "^4.4.5",
         "@primer/octicons-react": "^17.3.0",
         "@primer/primitives": "^7.8.3",
@@ -67,6 +70,7 @@
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-react-hooks": "^4.5.0",
         "events": "^3.3.0",
+        "http-proxy-middleware": "^2.0.6",
         "os-browserify": "^0.3.0",
         "parcel": "2.5.0",
         "path-browserify": "^1.0.1",
