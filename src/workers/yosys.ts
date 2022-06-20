@@ -22,12 +22,6 @@ export class WorkerYosys extends WorkerTool<Yosys> {
 
     async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
         const path = `/storages/${file.getFullPath()}`;
-        // const extension = file.getExtension();
-        // const content = await file.readText();
-
-        // this.tool.getFS().writeFile(`design.${extension}`, content);
-
-        console.debug('YOSYS', path);
 
         this.tool.getFS().writeFile(`design.ys`, `
             design -reset;
@@ -39,8 +33,8 @@ export class WorkerYosys extends WorkerTool<Yosys> {
             synth_ice40 -json luts.json;
         `);
 
-        // @ts-expect-error: ccall does not exist on type
-        this.tool.getModule().ccall('run', '', ['string'], ['script design.ys']);
+        // @ts-expect-error callMain does not exist on type
+        this.tool.getModule().callMain(['-T', 'design.ys']);
 
         // TODO: consider writing back to FS here instead of in main thread
 
