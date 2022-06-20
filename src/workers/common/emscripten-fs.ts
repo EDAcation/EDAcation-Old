@@ -1,5 +1,6 @@
 import {addDebugLogging} from '../../util';
 
+import {BLOCK_SIZE} from './constants';
 import {EmscriptenWrapper, WorkerTool} from './tool';
 
 const ENOENT = 2;
@@ -162,7 +163,7 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                     mtime: new Date(node.timestamp),
                     ctime: new Date(node.timestamp),
                     size: node.lastSize || 0,
-                    blksize: 4096,
+                    blksize: BLOCK_SIZE,
                     blocks: 0
                 };
 

@@ -1,7 +1,9 @@
 import {serializeState} from '../serializable';
 import {Storage} from '../storage';
 
-const sharedBuffer = new SharedArrayBuffer(1024);
+import {SHARED_BUFFER_LENGTH} from './common/constants';
+
+const sharedBuffer = new SharedArrayBuffer(SHARED_BUFFER_LENGTH);
 
 // @ts-expect-error: import.meta.url is not in the typing without ESM
 const workerFs = new Worker(new URL('./fs.ts', import.meta.url), {type: 'module'});
