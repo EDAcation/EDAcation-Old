@@ -33,10 +33,13 @@ export class WorkerYosys extends WorkerTool<Yosys> {
             synth_ice40 -json luts.json;
         `);
 
+        // TODO: Yosys only accepts a script path and no flags
         // @ts-expect-error callMain does not exist on type
-        this.tool.getModule().callMain(['-T', 'design.ys']);
+        this.tool.getModule().callMain(['design.ys']);
 
         // TODO: consider writing back to FS here instead of in main thread
+
+        console.debug('Yosys is done');
 
         return [{
             name: 'rtl.dot',
