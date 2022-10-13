@@ -1,6 +1,5 @@
 import {v4 as uuidv4} from 'uuid';
 
-import {serializeState} from '../serializable';
 import {EditorFileLoaded} from '../store/files';
 import {workerNextpnr, workerYosys} from '../workers';
 import {ToolResult} from '../workers/common/tool';
