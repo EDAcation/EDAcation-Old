@@ -171,16 +171,14 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
 
                 return attr;
             },
-            setattr(_node: FSNode, _attr: Record<string, unknown>) {
+            setattr(node: FSNode, attr: Record<string, unknown>) {
                 // if (attr.mode !== undefined) {
                 //     node.mode = attr.mode;
                 // }
 
-                // if (attr.timestamp !== undefined) {
-                //     node.timestamp = attr.timestamp;
-                // }
-
-                throw new Error('Storage FS does not support setting file attributes.');
+                if (attr.timestamp !== undefined) {
+                    node.timestamp = attr.timestamp as number;
+                }
             },
             lookup(parent: FSNode, name: string): FSLookup {
                 const [type, size] = tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent).concat(name), 'stat');
@@ -263,5 +261,5 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
         }
     };
 
-    return addDebugLogging('StorageFS', STORAGE_FS);
+    return addDebugLogging('fs', 'StorageFS', STORAGE_FS);
 };

@@ -1,5 +1,6 @@
 import {deserializeState} from '../serializable';
 import {SerializedStorage, Storage, StorageDirectory, StorageFile} from '../storage';
+import {debug} from '../util';
 
 import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './common/constants';
 import {Data} from './common/data';
@@ -46,7 +47,7 @@ interface State {
 let state: State;
 
 const handleMessage = async (event: MessageEvent<Message>) => {
-    console.log(event);
+    debug('fs', event);
 
     switch (event.data.type) {
         case 'init': {
@@ -89,7 +90,7 @@ const handleMessage = async (event: MessageEvent<Message>) => {
         case 'call': {
             const {storageId, path, operation, ...args} = event.data;
 
-            console.log('FS received request', storageId, path, operation);
+            debug('fs', 'FS received request', storageId, path, operation);
 
             const storage = state.storages[storageId];
             if (!storage) {
@@ -99,12 +100,12 @@ const handleMessage = async (event: MessageEvent<Message>) => {
 
             const entry = await storage.getEntry(path);
 
-            console.log('FS is waiting for FS lock...');
+            debug('fs', 'FS is waiting for FS lock...');
 
             // Acquire FS lock
             state.lockFs.acquire();
 
-            console.log('FS has FS lock');
+            debug('fs', 'FS has FS lock');
 
             // Perform operation
             try {
@@ -202,7 +203,7 @@ const handleMessage = async (event: MessageEvent<Message>) => {
             // Release FS lock
             state.lockFs.release();
 
-            console.log('FS is done');
+            debug('fs', 'FS is done');
 
             break;
         }

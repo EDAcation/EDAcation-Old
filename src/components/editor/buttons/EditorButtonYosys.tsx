@@ -20,21 +20,15 @@ export const EditorButtonYosys: React.FC<BaseEditorButtonProps> = ({file}) => {
 
         // TODO: handle rejected action results
 
-        const actionDirectory = await dispatch(createStorageDirectory({
-            parent: directory,
-            name: file.file.getNameWithoutExtension()
-        }));
+        for (const path of result) {
+            if (path.endsWith('rtl.dot')) {
+                const resultFile = await directory.getEntry(path);
+                if (!resultFile || !(resultFile instanceof StorageFile)) {
+                    throw new Error('Result is not a storage file.');
+                }
 
-        for (const resultFile of result) {
-            const actionFile = await dispatch(createStorageFile({
-                parent: actionDirectory.payload as StorageDirectory<unknown, unknown>,
-                name: resultFile.name,
-                content: resultFile.content
-            }));
-
-            if (resultFile.name === 'rtl.dot') {
                 dispatch(openFile({
-                    file: actionFile.payload as StorageFile<unknown, unknown>,
+                    file: resultFile,
                     existing: true,
                     split: true,
                     reload: true

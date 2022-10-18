@@ -1,6 +1,6 @@
 import {deserializeState} from '../../serializable';
-import {SerializedStorage, Storage, StorageFile} from '../../storage';
-import {addDebugLogging} from '../../util';
+import {SerializedStorage, Storage, StorageDirectory, StorageFile} from '../../storage';
+import {debug} from '../../util';
 
 import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './constants';
 import {Data} from './data';
@@ -30,12 +30,6 @@ export interface ToolMessageCall {
 }
 
 export type ToolMessage = ToolMessageInit | ToolMessageStorage | ToolMessageCall;
-
-// TODO: consider if this is needed
-export interface ToolResult {
-    name: string;
-    content: string;
-}
 
 export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
 
@@ -134,37 +128,6 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
                 }, path);
 
                 this.isStorageMounted[storageId] = true;
-
-                // NOTE: test code from here
-                if (this.id === 1) {
-                    const node = this.fs.lookupPath('/tmp', {}).node;
-
-                    // @ts-expect-error: FSNode is an empty interface
-                    node.mount.type = addDebugLogging('MEMFS', node.mount.type);
-
-                    // @ts-expect-error: fs is not defined in worker context
-                    self.fs = this.fs;
-
-                    // this.fs.mkdir('/test');
-                    // // @ts-expect-error: this.fs.filesystems does not exist in typing
-                    // this.fs.mount(this.fs.filesystems.MEMFS, '/test');
-
-                    // console.debug(this.fs.lookupPath('/test', {}));
-
-                    // this.fs.writeFile('/tmp/test.txt', 'Hello World!');
-                    // console.debug(this.fs.readdir('/'));
-                    // console.debug(this.fs.lookupPath('/tmp', {}));
-                    // console.debug(this.fs.readFile('/tmp/test.txt', {
-                    //     encoding: 'utf8'
-                    // }));
-
-                    // this.fs.writeFile(`${path}/test.txt`, 'Hello World!');
-                    // console.debug(this.fs.readdir(`${path}`));
-                    // console.debug(this.fs.lookupPath(path, {}));
-                    console.debug(this.fs.readFile(`${path}/example.v`, {
-                        encoding: 'utf8'
-                    }));
-                }
             }
         }
     }
@@ -186,8 +149,13 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
             await this.toolPromise;
         }
 
+        // Determine paths
+        const directory = file.getParent();
+        const filePath = `/storages/${file.getFullPath()}`;
+        const directoryPath = `/storages/${directory.getFullPath()}`;
+
         // Execute the tool
-        const result = await this.execute(file);
+        const result = await this.execute(filePath, file, directoryPath, directory);
 
         postMessage({
             id: message.id,
@@ -200,12 +168,12 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
     callFs(storageId: string, path: string[], operation: 'stat'): [number, number];
     callFs(storageId: string, path: string[], operation: 'read', args: {start: number; end: number}): Uint8Array;
     callFs(storageId: string, path: string[], operation: Operation, args?: Record<string, unknown>): unknown {
-        console.debug(`worker ${this.id} is waiting for lock...`);
+        debug('fs', `worker ${this.id} is waiting for lock...`);
 
         // Acquire worker lock
         this.lockWorker.acquire();
 
-        console.debug(`worker ${this.id} has lock`);
+        debug('fs', `worker ${this.id} has lock`);
 
         // Acquire FS lock
         this.lockFs.acquire();
@@ -221,7 +189,7 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
         // Release of FS lock
         this.lockFs.release();
 
-        console.debug(`worker ${this.id} is waiting for response...`);
+        debug('fs', `worker ${this.id} is waiting for response...`);
 
         // Wait for worker notify
         Atomics.wait(this.arrayInt32, INDEX_WORKER_NOTIFY, 0);
@@ -256,17 +224,19 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
         // Clear data buffer
         this.data.clear();
 
-        console.debug(`worker ${this.id} received`, result);
+        debug('fs', `worker ${this.id} received`, result);
 
         // Release worker lock
         this.lockWorker.release();
 
-        console.debug(`worker ${this.id} is done`);
+        debug('fs', `worker ${this.id} is done`);
 
         return result;
     }
 
     abstract initialize(): Promise<Tool>;
 
-    abstract execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]>;
+    abstract execute(
+        filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
+    ): Promise<string[]>;
 }

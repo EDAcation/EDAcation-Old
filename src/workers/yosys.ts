@@ -1,8 +1,8 @@
 import {Yosys} from 'yosys';
 
-import {StorageFile} from '../storage';
+import {StorageDirectory, StorageFile} from '../storage';
 
-import {ToolResult, WorkerTool} from './common/tool';
+import {WorkerTool} from './common/tool';
 
 export class WorkerYosys extends WorkerTool<Yosys> {
 
@@ -20,38 +20,34 @@ export class WorkerYosys extends WorkerTool<Yosys> {
         return yosys;
     }
 
-    async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
-        const path = `/storages/${file.getFullPath()}`;
+    async execute(
+        filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
+    ): Promise<string[]> {
+        await directory.createDirectory(file.getNameWithoutExtension());
+
+        const outputPath = `${directoryPath}/${file.getNameWithoutExtension()}`;
 
         this.tool.getFS().writeFile(`design.ys`, `
             design -reset;
             design -reset-vlog;
-            read_verilog ${path};
+            read_verilog ${filePath};
             proc;
             opt;
             show;
-            synth_ice40 -json luts.json;
+            synth_ecp5 -json ${outputPath}/luts.json;
         `);
 
         // TODO: Yosys only accepts a script path and no flags
         // @ts-expect-error callMain does not exist on type
         this.tool.getModule().callMain(['design.ys']);
 
-        // TODO: consider writing back to FS here instead of in main thread
+        // Changing the path for the "show" command does not work in WebAssembly, so copy the file instead
+        this.tool.getFS().writeFile(`${outputPath}/rtl.dot`, this.tool.getFS().readFile('show.dot'));
 
-        console.debug('Yosys is done');
-
-        return [{
-            name: 'rtl.dot',
-            content: this.tool.getFS().readFile('show.dot', {
-                encoding: 'utf8'
-            })
-        }, {
-            name: 'luts.json',
-            content: this.tool.getFS().readFile('luts.json', {
-                encoding: 'utf8'
-            })
-        }];
+        return [
+            `${outputPath}/rtl.dot`,
+            `${outputPath}/luts.json`
+        ];
     }
 }
 

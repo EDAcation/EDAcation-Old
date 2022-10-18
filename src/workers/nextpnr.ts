@@ -1,8 +1,8 @@
 import {Nextpnr} from 'nextpnr';
 
-import {StorageFile} from '../storage';
+import {StorageDirectory, StorageFile} from '../storage';
 
-import {ToolResult, WorkerTool} from './common/tool';
+import {WorkerTool} from './common/tool';
 
 class WorkerNextpnr extends WorkerTool<Nextpnr> {
 
@@ -20,36 +20,28 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
         return nextpnr;
     }
 
-    async execute(file: StorageFile<unknown, unknown>): Promise<ToolResult[]> {
-        const content = await file.readText();
-        this.tool.getFS().writeFile('luts.json', content);
+    async execute(
+        filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
+    ): Promise<string[]> {
+        await directory.createDirectory(file.getNameWithoutExtension());
+
+        const outputPath = `${directoryPath}/${file.getNameWithoutExtension()}`;
 
         // @ts-expect-error: callMain does not exist on type
         this.tool.getModule().callMain([
             '--lp384',
-            '--json', 'luts.json',
+            '--json', filePath,
             '--package', 'qn32',
-            '--write', 'routed.json',
-            '--placed-svg', 'placed.svg',
-            '--routed-svg', 'routed.svg'
+            '--write', `${outputPath}/routed.json`,
+            '--placed-svg', `${outputPath}/placed.svg`,
+            '--routed-svg', `${outputPath}/routed.svg`
         ]);
 
-        return [{
-            name: 'routed.json',
-            content: this.tool.getFS().readFile('routed.json', {
-                encoding: 'utf8'
-            })
-        }, {
-            name: 'placed.svg',
-            content: this.tool.getFS().readFile('placed.svg', {
-                encoding: 'utf8'
-            })
-        }, {
-            name: 'routed.svg',
-            content: this.tool.getFS().readFile('routed.svg', {
-                encoding: 'utf8'
-            })
-        }];
+        return [
+            `${outputPath}/routed.json`,
+            `${outputPath}/placed.svg`,
+            `${outputPath}/routed.svg`
+        ];
     }
 }
 

@@ -1,10 +1,9 @@
 import {Button} from '@primer/react';
 import React from 'react';
 
-import {StorageDirectory, StorageFile} from '../../../storage';
+import {StorageFile} from '../../../storage';
 import {useAppDispatch} from '../../../store';
 import {openFile} from '../../../store/panels';
-import {createStorageDirectory, createStorageFile} from '../../../store/storage-entries';
 import {executeNextpnr} from '../../../tools';
 
 import {BaseEditorButtonProps} from './BaseEditorButton';
@@ -20,21 +19,15 @@ export const EditorButtonNextpnr: React.FC<BaseEditorButtonProps> = ({file}) => 
 
         // TODO: handle rejected action results
 
-        const actionDirectory = await dispatch(createStorageDirectory({
-            parent: directory,
-            name: file.file.getNameWithoutExtension()
-        }));
+        for (const path of result) {
+            if (path.endsWith('routed.svg')) {
+                const resultFile = await directory.getEntry(path);
+                if (!resultFile || !(resultFile instanceof StorageFile)) {
+                    throw new Error('Result is not a storage file.');
+                }
 
-        for (const resultFile of result) {
-            const actionFile = await dispatch(createStorageFile({
-                parent: actionDirectory.payload as StorageDirectory<unknown, unknown>,
-                name: resultFile.name,
-                content: resultFile.content
-            }));
-
-            if (resultFile.name === 'routed.json') {
                 dispatch(openFile({
-                    file: actionFile.payload as StorageFile<unknown, unknown>,
+                    file: resultFile,
                     existing: true,
                     split: true,
                     reload: true
