@@ -97,6 +97,10 @@ export abstract class StorageDirectory<DirectoryHandle, FileHandle, Serialized e
 
     abstract getEntry(name: string, force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle, Serialized> | undefined>;
 
+    async getEntryByPath(path: string[], force?: boolean): Promise<StorageEntry<DirectoryHandle, FileHandle, Serialized> | undefined> {
+        return Storage.getEntryByPath(this, path, force);
+    }
+
     abstract createDirectory(name: string): Promise<StorageDirectory<DirectoryHandle, FileHandle, Serialized>>;
 
     abstract createFile(name: string): Promise<StorageFile<DirectoryHandle, FileHandle, Serialized>>;
@@ -145,6 +149,8 @@ export abstract class StorageFile<DirectoryHandle, FileHandle, Serialized extend
         return JSON.parse(await this.readText());
     }
 
+    abstract truncate(size: number): Promise<void>;
+
     abstract write(buffer: ArrayBuffer, start?: number, end?: number): Promise<void>;
 
     abstract writeText(content: string, start?: number): Promise<void>;
@@ -180,6 +186,30 @@ export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends Se
 
     static getAddText() {
         return `Add ${this.getName()} storage`;
+    }
+
+    static async getEntryByPath<DirectoryHandle, FileHandle, Serialized extends SerializedStorage = SerializedStorage>(
+        directory: StorageDirectory<DirectoryHandle, FileHandle, Serialized>,
+        path: string[],
+        force?: boolean
+    ) {
+        let current = directory;
+        for (let i = 0; i < path.length; i++) {
+            const entry = await current.getEntry(path[i], force);
+            if (!entry) {
+                return undefined;
+            }
+            if (i < path.length - 1) {
+                if (!(entry instanceof StorageDirectory)) {
+                    throw new StorageError(`Entry "${path[i]}" in path "${path.join('/')}" is not a directory.`);
+                }
+                current = entry;
+                continue;
+            }
+
+            return entry;
+        }
+        return current;
     }
 
     constructor(id?: string) {
@@ -221,22 +251,6 @@ export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends Se
     abstract add(): Promise<void>;
 
     async getEntry(path: string[]) {
-        let current = await this.getRoot();
-        for (let i = 0; i < path.length; i++) {
-            const entry = await current.getEntry(path[i]);
-            if (!entry) {
-                return undefined;
-            }
-            if (i < path.length - 1) {
-                if (!(entry instanceof StorageDirectory)) {
-                    throw new StorageError(`Entry "${path[i]}" in path "${path.join('/')}" is not a directory.`);
-                }
-                current = entry;
-                continue;
-            }
-
-            return entry;
-        }
-        return current;
+        return await Storage.getEntryByPath(await this.getRoot(), path);
     }
 }

@@ -167,6 +167,8 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
     callFs(storageId: string, path: string[], operation: 'rmdir' | 'unlink'): void;
     callFs(storageId: string, path: string[], operation: 'stat'): [number, number];
     callFs(storageId: string, path: string[], operation: 'read', args: {start: number; end: number}): Uint8Array;
+    callFs(storageId: string, path: string[], operation: 'truncate', args: {size: number}): void;
+    callFs(storageId: string, path: string[], operation: 'write', args: {buffer: ArrayBuffer; start: number; end: number}): number;
     callFs(storageId: string, path: string[], operation: Operation, args?: Record<string, unknown>): unknown {
         debug('fs', `worker ${this.id} is waiting for lock...`);
 
@@ -217,6 +219,10 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
             }
             case 'read': {
                 result = this.data.readUint8Array();
+                break;
+            }
+            case 'truncate':
+            case 'write': {
                 break;
             }
         }

@@ -23,9 +23,10 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
     async execute(
         filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
     ): Promise<string[]> {
-        await directory.createDirectory(file.getNameWithoutExtension());
+        const outputDirectory = file.getNameWithoutExtension();
+        const outputPath = `${directoryPath}/${outputDirectory}`;
 
-        const outputPath = `${directoryPath}/${file.getNameWithoutExtension()}`;
+        await directory.createDirectory(outputDirectory);
 
         // @ts-expect-error: callMain does not exist on type
         this.tool.getModule().callMain([
@@ -38,9 +39,9 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
         ]);
 
         return [
-            `${outputPath}/routed.json`,
-            `${outputPath}/placed.svg`,
-            `${outputPath}/routed.svg`
+            `${outputDirectory}/routed.json`,
+            `${outputDirectory}/placed.svg`,
+            `${outputDirectory}/routed.svg`
         ];
     }
 }

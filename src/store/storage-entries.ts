@@ -43,8 +43,12 @@ export const createStorageFile = createAsyncThunk(
         if (content) {
             if (isJSON) {
                 await file.writeJSON(content);
+            } else if (typeof content === 'string') {
+                await file.writeText(content);
+            } else if (content instanceof ArrayBuffer) {
+                await file.write(content);
             } else {
-                await file.write(content as string);
+                throw new Error(`Unknown content type "${typeof content}"`);
             }
         }
 
@@ -63,6 +67,8 @@ export const deleteStorageEntry = createAsyncThunk(
         if (parent) {
             await thunkAPI.dispatch(loadStorageEntries(parent));
         }
+
+        // TODO: close editor files
     }
 );
 

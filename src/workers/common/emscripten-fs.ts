@@ -179,6 +179,12 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                 if (attr.timestamp !== undefined) {
                     node.timestamp = attr.timestamp as number;
                 }
+
+                if (attr.size !== undefined) {
+                    tool.callFs(node.mount.opts.storageId as string, nodeToPath(node), 'truncate', {
+                        size: attr.size as number
+                    });
+                }
             },
             lookup(parent: FSNode, name: string): FSLookup {
                 const [type, size] = tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent).concat(name), 'stat');
@@ -199,7 +205,7 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
             mknod(parent: FSNode, name: string, mode: number, dev: number): FSNode {
                 return STORAGE_FS.createNode(parent, name, mode, dev);
             },
-            rename(oldNode: FSNode, newDir, newName: string) {
+            rename(_oldNode: FSNode, _newDir, _newName: string) {
                 throw new Error('Not implemented.');
             },
             unlink(parent: FSNode, name: string) {
@@ -232,8 +238,18 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
 
                 return data.length;
             },
-            write(stream: FSStream, buffer: ArrayBufferView, offset: number, length: number, position: number, canOwn?: boolean): number {
-                throw new Error('Not implemented.');
+            write(stream: FSStream, buffer: ArrayBufferView, offset: number, length: number, position: number): number {
+                if (length === 0) {
+                    return length;
+                }
+
+                tool.callFs(stream.node.mount.opts.storageId as string, nodeToPath(stream.node), 'write', {
+                    buffer: buffer.buffer.slice(offset, offset + length),
+                    start: position,
+                    end: position + length
+                });
+
+                return length;
             },
             llseek(stream: FSStream, offset: number, whence: number) {
                 let position = offset;

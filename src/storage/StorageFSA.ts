@@ -96,6 +96,12 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
         return await file.slice(start, end).text();
     }
 
+    async truncate(size: number) {
+        const writable = await this.handle.createWritable();
+        await writable.truncate(size);
+        await writable.close();
+    }
+
     async write(buffer: ArrayBuffer, start?: number, end?: number) {
         const writable = await this.handle.createWritable();
 

@@ -4,7 +4,7 @@ import React, {Fragment} from 'react';
 
 import {StorageDirectory, StorageEntry, StorageEntryType, StorageFile} from '../../storage';
 import {AppDispatch, useAppDispatch} from '../../store';
-import {openFile} from '../../store/panels';
+import {closeFile, openFile} from '../../store/panels';
 import {openPopup} from '../../store/popups';
 import {createStorageDirectory, createStorageFile, deleteStorageEntry} from '../../store/storage-entries';
 

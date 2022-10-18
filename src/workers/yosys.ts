@@ -23,9 +23,14 @@ export class WorkerYosys extends WorkerTool<Yosys> {
     async execute(
         filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
     ): Promise<string[]> {
-        await directory.createDirectory(file.getNameWithoutExtension());
+        const outputDirectory = file.getNameWithoutExtension();
+        const outputPath = `${directoryPath}/${outputDirectory}`;
 
-        const outputPath = `${directoryPath}/${file.getNameWithoutExtension()}`;
+        await directory.createDirectory(outputDirectory);
+
+        this.tool.getFS().writeFile(`${outputPath}/test.json`, JSON.stringify({
+            abc: 123
+        }));
 
         this.tool.getFS().writeFile(`design.ys`, `
             design -reset;
@@ -36,6 +41,7 @@ export class WorkerYosys extends WorkerTool<Yosys> {
             show;
             synth_ecp5 -json ${outputPath}/luts.json;
         `);
+        // synth_ecp5 -json ${outputPath}/luts.json;
 
         // TODO: Yosys only accepts a script path and no flags
         // @ts-expect-error callMain does not exist on type
@@ -45,8 +51,8 @@ export class WorkerYosys extends WorkerTool<Yosys> {
         this.tool.getFS().writeFile(`${outputPath}/rtl.dot`, this.tool.getFS().readFile('show.dot'));
 
         return [
-            `${outputPath}/rtl.dot`,
-            `${outputPath}/luts.json`
+            `${outputDirectory}/rtl.dot`,
+            `${outputDirectory}/luts.json`
         ];
     }
 }

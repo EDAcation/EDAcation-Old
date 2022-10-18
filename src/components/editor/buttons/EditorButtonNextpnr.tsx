@@ -21,7 +21,7 @@ export const EditorButtonNextpnr: React.FC<BaseEditorButtonProps> = ({file}) => 
 
         for (const path of result) {
             if (path.endsWith('routed.svg')) {
-                const resultFile = await directory.getEntry(path);
+                const resultFile = await directory.getEntryByPath(path.split('/'));
                 if (!resultFile || !(resultFile instanceof StorageFile)) {
                     throw new Error('Result is not a storage file.');
                 }

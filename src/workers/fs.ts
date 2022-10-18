@@ -98,7 +98,7 @@ const handleMessage = async (event: MessageEvent<Message>) => {
                 break;
             }
 
-            const entry = await storage.getEntry(path);
+            let entry = await storage.getEntry(path);
 
             debug('fs', 'FS is waiting for FS lock...');
 
@@ -170,7 +170,7 @@ const handleMessage = async (event: MessageEvent<Message>) => {
                             throw new Error('Storage entry is not a file.');
                         }
 
-                        // Read file
+                        // Read from file
                         const result = await entry.read(args.start as number, args.end as number);
                         const resultArray = new Uint8Array(result);
 
@@ -179,8 +179,41 @@ const handleMessage = async (event: MessageEvent<Message>) => {
 
                         break;
                     }
+                    case 'truncate': {
+                        if (!entry) {
+                            const directory = await storage.getEntry(path.slice(0, path.length - 1));
+                            if (!(directory instanceof StorageDirectory)) {
+                                throw new Error('Parent of storage entry is not a directory.');
+                            }
+                            entry = await directory.createFile(path[path.length - 1]);
+                        }
+
+                        if (!(entry instanceof StorageFile)) {
+                            throw new Error('Storage entry is not a file.');
+                        }
+
+                        // Truncate file
+                        await entry.truncate(args.size as number);
+
+                        break;
+                    }
                     case 'write': {
-                        throw new Error('Not implemented');
+                        if (!entry) {
+                            const directory = await storage.getEntry(path.slice(0, path.length - 1));
+                            if (!(directory instanceof StorageDirectory)) {
+                                throw new Error('Parent of storage entry is not a directory.');
+                            }
+                            entry = await directory.createFile(path[path.length - 1]);
+                        }
+
+                        if (!(entry instanceof StorageFile)) {
+                            throw new Error('Storage entry is not a file.');
+                        }
+
+                        // Write to file
+                        await entry.write(args.buffer as ArrayBuffer, args.start as number, args.end as number);
+
+                        break;
                     }
                 }
             } catch (err) {
