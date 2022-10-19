@@ -1,5 +1,5 @@
 import {deserializeState} from '../serializable';
-import {SerializedStorage, Storage, StorageDirectory, StorageFile} from '../storage';
+import {SerializedStorage, Storage, StorageDirectory, StorageEntryType, StorageFile} from '../storage';
 import {debug} from '../util';
 
 import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './common/constants';
@@ -98,7 +98,7 @@ const handleMessage = async (event: MessageEvent<Message>) => {
                 break;
             }
 
-            let entry = await storage.getEntry(path);
+            let entry = await storage.getEntry(path, true);
 
             debug('fs', 'FS is waiting for FS lock...');
 
@@ -127,13 +127,32 @@ const handleMessage = async (event: MessageEvent<Message>) => {
 
                         break;
                     }
+                    case 'mknod': {
+                        if (!(entry instanceof StorageDirectory)) {
+                            throw new Error('Storage entry is not a directory.');
+                        }
+
+                        // Create entry
+                        switch (args.mode as StorageEntryType) {
+                            case StorageEntryType.DIRECTORY: {
+                                await entry.createDirectory(args.name as string);
+                                break;
+                            }
+                            case StorageEntryType.FILE: {
+                                await entry.createFile(args.name as string);
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
                     case 'rmdir': {
                         if (!(entry instanceof StorageDirectory)) {
                             throw new Error('Storage entry is not a directory.');
                         }
 
                         // Delete directory
-                        await entry.delete();
+                        await entry.delete(true);
 
                         break;
                     }

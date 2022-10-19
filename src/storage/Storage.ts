@@ -250,7 +250,7 @@ export abstract class Storage<DirectoryHandle, FileHandle, Serialized extends Se
 
     abstract add(): Promise<void>;
 
-    async getEntry(path: string[]) {
-        return await Storage.getEntryByPath(await this.getRoot(), path);
+    async getEntry(path: string[], force?: boolean) {
+        return await Storage.getEntryByPath(await this.getRoot(), path, force);
     }
 }

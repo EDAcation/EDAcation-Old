@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 
-import {StorageDirectory, StorageEntry} from '../storage';
+import {StorageDirectory, StorageEntry, StorageFile} from '../storage';
 
 export type StorageEntriesState = Record<string, StorageEntry<unknown, unknown>[]>;
 
@@ -61,14 +61,18 @@ export const createStorageFile = createAsyncThunk(
 export const deleteStorageEntry = createAsyncThunk(
     'deleteStorageEntry',
     async (entry: StorageEntry<unknown, unknown>, thunkAPI) => {
-        await entry.delete();
+        await entry.delete(true);
 
         const parent = entry.getParent();
         if (parent) {
             await thunkAPI.dispatch(loadStorageEntries(parent));
         }
 
-        // TODO: close editor files
+        if (entry instanceof StorageDirectory) {
+            // TODO: close editor files recursively
+        } else if (entry instanceof StorageFile) {
+            // TODO: close editor files
+        }
     }
 );
 

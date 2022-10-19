@@ -1,8 +1,8 @@
 import {Yosys} from 'yosys';
 
-import {StorageDirectory, StorageFile} from '../storage';
+import {StorageFile} from '../storage';
 
-import {WorkerTool} from './common/tool';
+import {ToolFSMapping, WorkerTool} from './common/tool';
 
 export class WorkerYosys extends WorkerTool<Yosys> {
 
@@ -20,18 +20,7 @@ export class WorkerYosys extends WorkerTool<Yosys> {
         return yosys;
     }
 
-    async execute(
-        filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
-    ): Promise<string[]> {
-        const outputDirectory = file.getNameWithoutExtension();
-        const outputPath = `${directoryPath}/${outputDirectory}`;
-
-        await directory.createDirectory(outputDirectory);
-
-        this.tool.getFS().writeFile(`${outputPath}/test.json`, JSON.stringify({
-            abc: 123
-        }));
-
+    async execute(filePath: string, file: StorageFile<unknown, unknown>): Promise<ToolFSMapping[]> {
         this.tool.getFS().writeFile(`design.ys`, `
             design -reset;
             design -reset-vlog;
@@ -39,20 +28,28 @@ export class WorkerYosys extends WorkerTool<Yosys> {
             proc;
             opt;
             show;
-            synth_ecp5 -json ${outputPath}/luts.json;
+            synth_ecp5 -json luts.json;
         `);
-        // synth_ecp5 -json ${outputPath}/luts.json;
 
         // TODO: Yosys only accepts a script path and no flags
         // @ts-expect-error callMain does not exist on type
         this.tool.getModule().callMain(['design.ys']);
 
-        // Changing the path for the "show" command does not work in WebAssembly, so copy the file instead
-        this.tool.getFS().writeFile(`${outputPath}/rtl.dot`, this.tool.getFS().readFile('show.dot'));
+        const outputDirectory = file.getNameWithoutExtension();
 
         return [
-            `${outputDirectory}/rtl.dot`,
-            `${outputDirectory}/luts.json`
+            {
+                path: outputDirectory,
+                directory: true
+            },
+            {
+                path: `${outputDirectory}/rtl.dot`,
+                file: 'show.dot'
+            },
+            {
+                path: `${outputDirectory}/luts.json`,
+                file: 'luts.json'
+            }
         ];
     }
 }

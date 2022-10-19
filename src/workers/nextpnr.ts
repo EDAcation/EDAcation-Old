@@ -1,8 +1,6 @@
 import {Nextpnr} from 'nextpnr';
 
-import {StorageDirectory, StorageFile} from '../storage';
-
-import {WorkerTool} from './common/tool';
+import {ToolFSMapping, WorkerTool} from './common/tool';
 
 class WorkerNextpnr extends WorkerTool<Nextpnr> {
 
@@ -20,28 +18,30 @@ class WorkerNextpnr extends WorkerTool<Nextpnr> {
         return nextpnr;
     }
 
-    async execute(
-        filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
-    ): Promise<string[]> {
-        const outputDirectory = file.getNameWithoutExtension();
-        const outputPath = `${directoryPath}/${outputDirectory}`;
-
-        await directory.createDirectory(outputDirectory);
-
+    async execute(filePath: string): Promise<ToolFSMapping[]> {
         // @ts-expect-error: callMain does not exist on type
         this.tool.getModule().callMain([
             '--lp384',
             '--json', filePath,
             '--package', 'qn32',
-            '--write', `${outputPath}/routed.json`,
-            '--placed-svg', `${outputPath}/placed.svg`,
-            '--routed-svg', `${outputPath}/routed.svg`
+            '--write', 'routed.json',
+            '--placed-svg', 'placed.svg',
+            '--routed-svg', 'routed.svg'
         ]);
 
         return [
-            `${outputDirectory}/routed.json`,
-            `${outputDirectory}/placed.svg`,
-            `${outputDirectory}/routed.svg`
+            {
+                path: 'routed.json',
+                file: 'routed.json'
+            },
+            {
+                path: 'placed.svg',
+                file: 'placed.svg'
+            },
+            {
+                path: 'routed.svg',
+                file: 'routed.svg'
+            }
         ];
     }
 }

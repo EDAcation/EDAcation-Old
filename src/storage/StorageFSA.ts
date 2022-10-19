@@ -114,6 +114,7 @@ export class StorageFileFSA extends StorageFile<FileSystemDirectoryHandle, FileS
         }
 
         await writable.write(buffer);
+
         await writable.close();
     }
 

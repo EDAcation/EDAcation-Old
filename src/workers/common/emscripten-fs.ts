@@ -1,4 +1,5 @@
-import {addDebugLogging} from '../../util';
+import {StorageEntryType} from '../../storage';
+import {debug, addDebugLogging} from '../../util';
 
 import {BLOCK_SIZE} from './constants';
 import {EmscriptenWrapper, WorkerTool} from './tool';
@@ -203,6 +204,14 @@ export const createStorageFS = (FS, tool: WorkerTool<EmscriptenWrapper>) => {
                 return STORAGE_FS.createNode(parent, name, mode, 0, size);
             },
             mknod(parent: FSNode, name: string, mode: number, dev: number): FSNode {
+                if (!FS.isDir(mode) && !FS.isFile(mode)) {
+                    throw new Error('Storage FS does not support nodes other than dir and file.');
+                }
+
+                tool.callFs(parent.mount.opts.storageId as string, nodeToPath(parent), 'mknod', {
+                    name,
+                    mode: FS.isDir(mode) ? StorageEntryType.DIRECTORY : StorageEntryType.FILE
+                });
                 return STORAGE_FS.createNode(parent, name, mode, dev);
             },
             rename(_oldNode: FSNode, _newDir, _newName: string) {

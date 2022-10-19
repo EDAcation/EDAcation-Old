@@ -11,4 +11,4 @@ export const INDEX_DATA = 3;
 // The shared buffer is used by both uint8 and int32 typed arrays, so the length has to be a multiple of 4 (for int32).
 export const SHARED_BUFFER_LENGTH = (INDEX_DATA + 1) * 4 + BLOCK_SIZE;
 
-export type Operation = 'readdir'| 'rmdir' | 'unlink' | 'stat' | 'read' | 'truncate' | 'write';
+export type Operation = 'readdir'| 'mknod' | 'rmdir' | 'unlink' | 'stat' | 'read' | 'truncate' | 'write';

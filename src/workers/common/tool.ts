@@ -1,11 +1,15 @@
 import {deserializeState} from '../../serializable';
-import {SerializedStorage, Storage, StorageDirectory, StorageFile} from '../../storage';
+import {SerializedStorage, Storage, StorageDirectory, StorageEntry, StorageEntryType, StorageFile} from '../../storage';
 import {debug} from '../../util';
 
 import {INDEX_DATA, INDEX_FS_LOCK, INDEX_WORKER_LOCK, INDEX_WORKER_NOTIFY, Operation} from './constants';
 import {Data} from './data';
 import {createStorageFS} from './emscripten-fs';
 import {Mutex} from './mutex';
+
+export interface ErrnoError extends Error {
+    code: string;
+}
 
 export interface EmscriptenWrapper {
     getFS(): typeof FS;
@@ -31,6 +35,12 @@ export interface ToolMessageCall {
 
 export type ToolMessage = ToolMessageInit | ToolMessageStorage | ToolMessageCall;
 
+export interface ToolFSMapping {
+    path: string;
+    directory?: boolean;
+    file?: string;
+}
+
 export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
 
     private readonly id: number;
@@ -45,6 +55,7 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
     private toolPromise: Promise<void>;
     protected tool: Tool;
     private fs: typeof FS;
+    private fsError: new () => ErrnoError;
     private storageFs: Emscripten.FileSystemType;
 
     private storages: Record<string, Storage<unknown, unknown>>;
@@ -100,6 +111,8 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
 
         // Initialize file system
         this.fs = this.tool.getFS();
+        // @ts-ignore: ErrnoError does not exist on FS type
+        this.fsError = this.tool.getFS().ErrnoError;
         this.storageFs = createStorageFS(this.fs, this);
         this.fs.mkdir('/storages');
         this.mountStorages();
@@ -155,15 +168,41 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
         const directoryPath = `/storages/${directory.getFullPath()}`;
 
         // Execute the tool
-        const result = await this.execute(filePath, file, directoryPath, directory);
+        const mappings = await this.execute(filePath, file, directoryPath, directory);
+
+        for (const mapping of mappings) {
+            const mappingPath = `${directoryPath}/${mapping.path}`;
+            console.log(mapping, mappingPath);
+
+            if (mapping.directory) {
+                try {
+                    const info = this.tool.getFS().stat(mappingPath);
+                    if (!this.tool.getFS().isDir(info.mode)) {
+                        throw new Error(`Mapping path "${mappingPath}" already exists, but is not a directory.`);
+                    }
+                } catch (err) {
+                    console.log(err instanceof this.fsError && err.code === 'EACCES', err);
+                    if (err instanceof this.fsError && err.code === 'EACCES') {
+                        this.tool.getFS().mkdir(mappingPath);
+                    } else {
+                        throw err;
+                    }
+                }
+            } else if (mapping.file) {
+                this.tool.getFS().writeFile(mappingPath, this.tool.getFS().readFile(mapping.file));
+            } else {
+                throw new Error(`Unknown mapping type "${mapping.path}".`);
+            }
+        }
 
         postMessage({
             id: message.id,
-            result
+            result: mappings.map((mapping) => mapping.path)
         });
     }
 
     callFs(storageId: string, path: string[], operation: 'readdir'): string[];
+    callFs(storageId: string, path: string[], operation: 'mknod', args: {name: string; mode: StorageEntryType}): void;
     callFs(storageId: string, path: string[], operation: 'rmdir' | 'unlink'): void;
     callFs(storageId: string, path: string[], operation: 'stat'): [number, number];
     callFs(storageId: string, path: string[], operation: 'read', args: {start: number; end: number}): Uint8Array;
@@ -221,10 +260,6 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
                 result = this.data.readUint8Array();
                 break;
             }
-            case 'truncate':
-            case 'write': {
-                break;
-            }
         }
 
         // Clear data buffer
@@ -244,5 +279,5 @@ export abstract class WorkerTool<Tool extends EmscriptenWrapper> {
 
     abstract execute(
         filePath: string, file: StorageFile<unknown, unknown>, directoryPath: string, directory: StorageDirectory<unknown, unknown>
-    ): Promise<string[]>;
+    ): Promise<ToolFSMapping[]>;
 }
